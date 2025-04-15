@@ -5,8 +5,14 @@ const api = axios.create({
   baseURL: "https://isit950-backend.vercel.app/",
   headers: {
     "Content-Type": "application/json",
+    // Accept: "application/json",
   },
+  // withCredentials: true, 
 });
+
+// Add this to your axios instance configuration
+api.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
+api.defaults.headers.common["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE,PATCH,OPTIONS";
 
 // Add request interceptor to include auth token if available
 api.interceptors.request.use(
