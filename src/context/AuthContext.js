@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authAPI } from "@/lib/api";
+import { authAPI, userAPI } from "@/lib/api";
 
 const AuthContext = createContext();
 
@@ -11,33 +11,43 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Fetch user profile from backend
+  const fetchUser = async (email) => {
+    try {
+      const userData = await userAPI.getProfile(email);
+      setUser(userData);
+      return userData;
+    } catch (err) {
+      setUser(null);
+      return null;
+    }
+  };
+
   useEffect(() => {
     async function loadUser() {
       const token = localStorage.getItem("authToken");
-      if (token) {
-        try {
-          // You might want to fetch user data here if needed
-          // const userData = await userAPI.getProfile();
-          // setUser(userData);
-        } catch (err) {
-          console.error("Failed to load user", err);
-          logout();
-        }
+      const email = localStorage.getItem("userEmail");
+      if (token && email) {
+        await fetchUser(email);
       }
       setLoading(false);
     }
-
     loadUser();
   }, []);
 
   const login = async (email, password) => {
     try {
-      const { access_token } = await authAPI.login(email, password);
-      localStorage.setItem("authToken", access_token);
-      // Fetch user data if needed
-      // const userData = await userAPI.getProfile(email);
-      // setUser(userData);
-      return { success: true };
+      const response = await authAPI.login(email, password);
+      // Accept both token and access_token for compatibility
+      const token = response.token || response.access_token;
+      if (token) {
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("userEmail", email);
+        await fetchUser(email);
+        return { success: true };
+      } else {
+        return { success: false, error: response.message || "Login failed" };
+      }
     } catch (error) {
       return { success: false, error: error.message || "Login failed" };
     }
@@ -54,12 +64,15 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("userEmail");
     setUser(null);
     router.push("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, signup, logout, fetchUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,6 @@
 export async function POST(request) {
   const body = await request.json();
-  const targetUrl = "https://isit950-backend.vercel.app/auth/signup";
+  const targetUrl = "https://isit950-middleware.vercel.app/auth/signup";
 
   try {
     const response = await fetch(targetUrl, {

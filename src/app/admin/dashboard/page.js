@@ -2,30 +2,35 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { adminAPI } from "@/lib/api";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock data fetch
   useEffect(() => {
     const fetchStats = async () => {
       try {
         // Check authentication
         const token = localStorage.getItem("authToken");
-        if (!token || token !== "superuser-token-123") {
+        if (!token) {
           router.push("/login");
           return;
         }
 
-        // Simulate API call
+        // Fetch real user and hotel counts from backend
+        const [userCountData, hotelCountData] = await Promise.all([
+          adminAPI.getUsersCount(),
+          adminAPI.getHotelsCount(),
+        ]);
+        // Simulate API call for other stats (replace with real API as needed)
         await new Promise((resolve) => setTimeout(resolve, 800));
 
         setStats({
-          totalUsers: 1243,
-          activeUsers: 892,
-          totalHotels: 56,
+          totalUsers: userCountData.totalCount,
+          activeUsers: 892, // keep mock for now
+          totalHotels: hotelCountData.totalCount,
           occupiedRooms: 342,
           availableRooms: 128,
           revenue: 125640,
@@ -103,9 +108,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
         <div className="text-gray-500">
-          <p>
-            Coming soon...
-          </p>
+          <p>Coming soon...</p>
         </div>
       </div>
     </div>

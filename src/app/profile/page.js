@@ -3,70 +3,38 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/context/AuthContext";
+import { userAPI } from "@/lib/api";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [userData, setUserData] = useState(null);
+  const { user, loading, fetchUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Mock user data - replace with real API call later
-  const mockUserData = {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Hotel St, Suite 456",
-    membershipLevel: "Gold",
-    lastLogin: "2023-06-15T10:30:00Z",
-  };
-
-  // Mock API to fetch user data
-  const fetchUserData = async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(mockUserData);
-      }, 800);
-    });
-  };
-
-  // Mock API to update user data
-  const updateUserData = async (updatedData) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (updatedData.name && updatedData.email) {
-          resolve({ ...mockUserData, ...updatedData });
-        } else {
-          reject(new Error("Validation failed"));
-        }
-      }, 1000);
-    });
-  };
-
   useEffect(() => {
     const loadData = async () => {
       try {
         // Check if user is authenticated
         const token = localStorage.getItem("authToken");
-        if (!token) {
+        const email = localStorage.getItem("userEmail");
+        if (!token || !email) {
           router.push("/login");
           return;
         }
-
-        const data = await fetchUserData();
-        setUserData(data);
-        setEditData(data);
+        await fetchUser(email);
+        setEditData(user || {});
       } catch (err) {
         setError("Failed to load user data");
       } finally {
         setIsLoading(false);
       }
     };
-
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const handleEditToggle = () => {
@@ -85,12 +53,11 @@ export default function ProfilePage() {
     setIsLoading(true);
     setError("");
     setSuccess("");
-
     try {
-      const updatedData = await updateUserData(editData);
-      setUserData(updatedData);
+      const updatedData = await userAPI.updateProfile(editData);
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
+      await fetchUser(editData.email);
     } catch (err) {
       setError(err.message || "Failed to update profile");
     } finally {
@@ -98,11 +65,11 @@ export default function ProfilePage() {
     }
   };
 
-  if (isLoading && !userData) {
+  if (isLoading || loading) {
     return <LoadingSpinner />;
   }
 
-  if (!userData) {
+  if (!user) {
     return <div className="p-4 text-red-500">No user data available</div>;
   }
 
@@ -235,23 +202,17 @@ export default function ProfilePage() {
                     <h2 className="text-sm font-medium text-gray-500">
                       Full Name
                     </h2>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {userData.name}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-900">{user.name}</p>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-medium text-gray-500">Email</h2>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {userData.email}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-900">{user.email}</p>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-medium text-gray-500">Phone</h2>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {userData.phone}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-900">{user.phone}</p>
                   </div>
 
                   <div>
@@ -259,7 +220,7 @@ export default function ProfilePage() {
                       Membership Level
                     </h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {userData.membershipLevel}
+                      {user.membershipLevel}
                     </p>
                   </div>
 
@@ -267,9 +228,7 @@ export default function ProfilePage() {
                     <h2 className="text-sm font-medium text-gray-500">
                       Address
                     </h2>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {userData.address}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-900">{user.address}</p>
                   </div>
 
                   <div>
@@ -277,7 +236,7 @@ export default function ProfilePage() {
                       Last Login
                     </h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {new Date(userData.lastLogin).toLocaleString()}
+                      {new Date(user.lastLogin).toLocaleString()}
                     </p>
                   </div>
                 </div>
