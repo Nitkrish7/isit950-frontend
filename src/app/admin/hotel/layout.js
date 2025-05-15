@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import HotelAdminNavbar from "@/components/HotelAdminNavbar";
 
 export default function HotelAdminLayout({ children }) {
   const router = useRouter();
@@ -13,29 +13,7 @@ export default function HotelAdminLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-blue-800 text-white">
-        <div className="p-4">
-          <h1 className="text-xl font-bold">Hotel Admin Panel</h1>
-          <p className="text-xs text-blue-200">Hotel ID: {hotelId}</p>
-        </div>
-        <nav className="mt-6">
-          <NavItem href="/admin/hotel/dashboard">
-            Dashboard
-          </NavItem>
-          <NavItem href="/admin/hotel/rooms">
-            Room Management
-          </NavItem>
-          <NavItem href="/admin/hotel/bookings">
-            Bookings
-          </NavItem>
-          <NavItem href="/admin/hotel/analytics">
-            Analytics
-          </NavItem>
-        </nav>
-      </div>
-
-      {/* Main Content */}
+      <HotelAdminNavbar />
       <div className="ml-64">
         {/* Top Bar */}
         <header className="bg-white shadow">

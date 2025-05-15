@@ -14,6 +14,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showError, setShowError] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -69,14 +70,22 @@ export default function ProfilePage() {
     return <LoadingSpinner />;
   }
 
-  if (!user) {
-    return <div className="p-4 text-red-500">No user data available</div>;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white shadow rounded-lg overflow-hidden">
+          {/* Error Toast */}
+          {error && showError && (
+            <div className="mb-4 flex items-center justify-between p-4 text-sm text-red-700 bg-red-100 rounded-lg">
+              <span>{error}</span>
+              <button
+                onClick={() => setShowError(false)}
+                className="ml-4 px-2 py-1 text-xs bg-red-200 text-red-800 rounded hover:bg-red-300"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
           {/* Profile Header */}
           <div className="bg-indigo-700 px-6 py-8 sm:px-10 sm:py-12">
             <div className="flex items-center justify-between">
@@ -89,6 +98,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleEditToggle}
                 className="px-4 py-2 bg-white text-indigo-700 rounded-md font-medium hover:bg-indigo-50 transition-colors"
+                disabled={!user}
               >
                 {isEditing ? "Cancel" : "Edit Profile"}
               </button>
@@ -97,12 +107,6 @@ export default function ProfilePage() {
 
           {/* Profile Content */}
           <div className="px-6 py-8 sm:px-10 sm:py-12">
-            {error && (
-              <div className="mb-6 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
-                {error}
-              </div>
-            )}
-
             {success && (
               <div className="mb-6 p-4 text-sm text-green-700 bg-green-100 rounded-lg">
                 {success}
@@ -127,6 +131,7 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       required
+                      disabled={!user}
                     />
                   </div>
 
@@ -145,6 +150,7 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       required
+                      disabled={!user}
                     />
                   </div>
 
@@ -162,6 +168,7 @@ export default function ProfilePage() {
                       value={editData.phone || ""}
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      disabled={!user}
                     />
                   </div>
 
@@ -179,6 +186,7 @@ export default function ProfilePage() {
                       value={editData.address || ""}
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      disabled={!user}
                     />
                   </div>
                 </div>
@@ -186,9 +194,9 @@ export default function ProfilePage() {
                 <div className="mt-8 flex justify-end">
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || !user}
                     className={`ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                      isLoading || !user ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
                     {isLoading ? "Saving..." : "Save Changes"}
@@ -202,17 +210,27 @@ export default function ProfilePage() {
                     <h2 className="text-sm font-medium text-gray-500">
                       Full Name
                     </h2>
-                    <p className="mt-1 text-sm text-gray-900">{user.name}</p>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {user?.name || <span className="text-gray-400">N/A</span>}
+                    </p>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-medium text-gray-500">Email</h2>
-                    <p className="mt-1 text-sm text-gray-900">{user.email}</p>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {user?.email || (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </p>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-medium text-gray-500">Phone</h2>
-                    <p className="mt-1 text-sm text-gray-900">{user.phone}</p>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {user?.phone || (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </p>
                   </div>
 
                   <div>
@@ -220,7 +238,9 @@ export default function ProfilePage() {
                       Membership Level
                     </h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {user.membershipLevel}
+                      {user?.membershipLevel || (
+                        <span className="text-gray-400">N/A</span>
+                      )}
                     </p>
                   </div>
 
@@ -228,7 +248,11 @@ export default function ProfilePage() {
                     <h2 className="text-sm font-medium text-gray-500">
                       Address
                     </h2>
-                    <p className="mt-1 text-sm text-gray-900">{user.address}</p>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {user?.address || (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </p>
                   </div>
 
                   <div>
@@ -236,7 +260,11 @@ export default function ProfilePage() {
                       Last Login
                     </h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {new Date(user.lastLogin).toLocaleString()}
+                      {user?.lastLogin ? (
+                        new Date(user.lastLogin).toLocaleString()
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
                     </p>
                   </div>
                 </div>

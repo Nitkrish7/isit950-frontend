@@ -2,6 +2,8 @@
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { userAPI } from "@/lib/api";
+import Link from "next/link";
+import UserNavbar from "@/components/UserNavbar";
 
 export default function UserHomePage() {
   const { user } = useAuth();
@@ -26,7 +28,8 @@ export default function UserHomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <UserNavbar />
       <div className="max-w-4xl mx-auto">
         <div className="bg-white shadow rounded-lg p-8 mb-8">
           <h1 className="text-3xl font-bold text-indigo-700 mb-2">
@@ -66,9 +69,11 @@ export default function UserHomePage() {
                       Admin: {hotel.adminemail}
                     </span>
                   </div>
-                  <button className="mt-4 w-full py-2 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors">
-                    View Details
-                  </button>
+                  <Link href={`/hotel/${hotel.id}`} legacyBehavior>
+                    <a className="mt-4 w-full py-2 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors text-center block">
+                      View Details
+                    </a>
+                  </Link>
                 </div>
               ))}
             </div>

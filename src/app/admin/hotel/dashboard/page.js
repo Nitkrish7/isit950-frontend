@@ -2,8 +2,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import StatCard from "@/components/StatCard";
+import HotelAdminNavbar from "@/components/HotelAdminNavbar";
 
-export default function HotelDashboard() {
+export default function HotelAdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,76 +29,27 @@ export default function HotelDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Hotel Overview</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Rooms"
-          value={stats.totalRooms}
-          icon="king_bed"
-          trend="steady"
-        />
-        <StatCard
-          title="Occupied Rooms"
-          value={stats.occupied}
-          icon="hotel"
-          trend="up"
-          percentage="12%"
-        />
-        <StatCard
-          title="Today's Revenue"
-          value={`$${stats.revenue.toLocaleString()}`}
-          icon="attach_money"
-          trend="up"
-          percentage="5%"
-        />
-        <StatCard
-          title="Today's Bookings"
-          value={stats.bookingsToday}
-          icon="today"
-          trend="down"
-          percentage="3%"
-        />
+      <h1 className="text-2xl font-bold text-blue-800 mb-6">Hotel Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-sm font-medium text-gray-500">Total Rooms</p>
+          <p className="text-2xl font-semibold text-gray-900">42</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-sm font-medium text-gray-500">Occupied Rooms</p>
+          <p className="text-2xl font-semibold text-gray-900">28</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-sm font-medium text-gray-500">Today's Bookings</p>
+          <p className="text-2xl font-semibold text-gray-900">5</p>
+        </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Bookings Widget */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="font-semibold mb-4">Recent Bookings</h3>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex justify-between border-b pb-2">
-                <div>
-                  <p className="font-medium">Booking #{1000 + i}</p>
-                  <p className="text-sm text-gray-500">
-                    Deluxe Room • 2 nights
-                  </p>
-                </div>
-                <p className="text-blue-600">$320</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Room Status Widget */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="font-semibold mb-4">Room Status</h3>
-          <div className="flex space-x-4">
-            <div className="flex-1">
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-green-500"
-                  style={{
-                    width: `${(stats.occupied / stats.totalRooms) * 100}%`,
-                  }}
-                ></div>
-              </div>
-              <p className="text-sm mt-2">
-                {stats.occupied}/{stats.totalRooms} rooms occupied
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">Welcome, Hotel Admin!</h2>
+        <p className="text-gray-600">
+          Here you can manage your rooms, view bookings, and monitor your
+          hotel's performance.
+        </p>
       </div>
     </div>
   );
