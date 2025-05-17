@@ -45,9 +45,10 @@ export const authAPI = {
 
 // User API methods
 export const userAPI = {
-  getProfile: (email) => api.post("/user/fetch", { email }),
-  updateProfile: (userData) => api.post("/user/update", userData),
+  getProfile: (email) => api.get(`/user/fetch/?email=${email}`),
+  updateProfile: (userData) => api.put("/user/update", userData),
   listHotels: () => api.get("/hotels/list"),
+  getHotelDetails: (id) => api.get(`/hotels/fetch/${id}`),
 };
 
 // Admin API methods

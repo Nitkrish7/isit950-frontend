@@ -110,7 +110,7 @@ export default function SignUpPage() {
             Create Account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Join our hotel management system
+            Join Staytion today
           </p>
         </div>
 

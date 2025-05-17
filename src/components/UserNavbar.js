@@ -1,9 +1,24 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useState, useRef } from "react";
 
 export default function UserNavbar({ back = false }) {
   const router = useRouter();
+  const { user, logout } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const timeoutId = useRef();
+
+  const handleMouseEnter = () => {
+    clearTimeout(timeoutId.current);
+    setDropdownOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutId.current = setTimeout(() => setDropdownOpen(false), 100);
+  };
+
   return (
     <nav className="bg-white shadow flex items-center justify-between px-8 py-4 mb-8">
       <div className="flex items-center gap-4">
@@ -30,24 +45,35 @@ export default function UserNavbar({ back = false }) {
         )}
         <div className="text-2xl font-bold text-indigo-700">Staytion</div>
       </div>
-      <div>
-        <Link href="/profile">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center cursor-pointer hover:bg-indigo-200 transition">
-            <svg
-              className="w-6 h-6 text-indigo-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
+      <div
+        className="relative"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="flex items-center space-x-2 cursor-pointer select-none">
+          <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+            {user?.name?.charAt(0) || "U"}
           </div>
-        </Link>
+          <span className="text-gray-700 font-medium">
+            {user?.name || "User"}
+          </span>
+        </div>
+        {dropdownOpen && (
+          <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
+            <Link
+              href="/profile"
+              className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+            >
+              Profile
+            </Link>
+            <button
+              onClick={logout}
+              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

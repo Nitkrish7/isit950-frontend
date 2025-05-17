@@ -44,7 +44,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem("authToken", token);
         localStorage.setItem("userEmail", email);
         await fetchUser(email);
-        return { success: true };
+        return { success: true, role: response.role };
       } else {
         return { success: false, error: response.message || "Login failed" };
       }

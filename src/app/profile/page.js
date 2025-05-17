@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/context/AuthContext";
 import { userAPI } from "@/lib/api";
+import UserNavbar from "@/components/UserNavbar";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -19,7 +20,6 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Check if user is authenticated
         const token = localStorage.getItem("authToken");
         const email = localStorage.getItem("userEmail");
         if (!token || !email) {
@@ -35,8 +35,7 @@ export default function ProfilePage() {
       }
     };
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [router, fetchUser]);
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
@@ -55,7 +54,13 @@ export default function ProfilePage() {
     setError("");
     setSuccess("");
     try {
-      const updatedData = await userAPI.updateProfile(editData);
+      const payload = {
+        email: editData.email,
+        name: editData.name,
+        phonenumber: editData.phonenumber,
+        dateofbirth: editData.dateofbirth,
+      };
+      await userAPI.updateProfile(payload);
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
       await fetchUser(editData.email);
@@ -71,8 +76,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <UserNavbar />
+      <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow rounded-lg overflow-hidden">
           {/* Error Toast */}
           {error && showError && (
@@ -114,7 +120,7 @@ export default function ProfilePage() {
             )}
 
             {isEditing ? (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                   <div>
                     <label
@@ -131,7 +137,6 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       required
-                      disabled={!user}
                     />
                   </div>
 
@@ -150,53 +155,54 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       required
-                      disabled={!user}
+                      disabled
                     />
                   </div>
 
                   <div>
                     <label
-                      htmlFor="phone"
+                      htmlFor="phonenumber"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Phone
+                      Phone Number
                     </label>
                     <input
                       type="tel"
-                      name="phone"
-                      id="phone"
-                      value={editData.phone || ""}
+                      name="phonenumber"
+                      id="phonenumber"
+                      value={editData.phonenumber || ""}
                       onChange={handleInputChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      disabled={!user}
+                      required
                     />
                   </div>
 
-                  <div className="sm:col-span-2">
+                  <div>
                     <label
-                      htmlFor="address"
+                      htmlFor="dateofbirth"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Address
+                      Date of Birth
                     </label>
                     <input
                       type="text"
-                      name="address"
-                      id="address"
-                      value={editData.address || ""}
+                      name="dateofbirth"
+                      id="dateofbirth"
+                      value={editData.dateofbirth || ""}
                       onChange={handleInputChange}
+                      placeholder="DD/MM/YYYY"
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      disabled={!user}
+                      required
                     />
                   </div>
                 </div>
 
-                <div className="mt-8 flex justify-end">
+                <div className="flex justify-end">
                   <button
                     type="submit"
-                    disabled={isLoading || !user}
+                    disabled={isLoading}
                     className={`ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                      isLoading || !user ? "opacity-50 cursor-not-allowed" : ""
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
                     {isLoading ? "Saving..." : "Save Changes"}
@@ -211,60 +217,39 @@ export default function ProfilePage() {
                       Full Name
                     </h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {user?.name || <span className="text-gray-400">N/A</span>}
+                      {user?.name || "N/A"}
                     </p>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-medium text-gray-500">Email</h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {user?.email || (
-                        <span className="text-gray-400">N/A</span>
-                      )}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">Phone</h2>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {user?.phone || (
-                        <span className="text-gray-400">N/A</span>
-                      )}
+                      {user?.email || "N/A"}
                     </p>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-medium text-gray-500">
-                      Membership Level
+                      Phone Number
                     </h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {user?.membershipLevel || (
-                        <span className="text-gray-400">N/A</span>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <h2 className="text-sm font-medium text-gray-500">
-                      Address
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {user?.address || (
-                        <span className="text-gray-400">N/A</span>
-                      )}
+                      {user?.phonenumber || "N/A"}
                     </p>
                   </div>
 
                   <div>
                     <h2 className="text-sm font-medium text-gray-500">
-                      Last Login
+                      Date of Birth
                     </h2>
                     <p className="mt-1 text-sm text-gray-900">
-                      {user?.lastLogin ? (
-                        new Date(user.lastLogin).toLocaleString()
-                      ) : (
-                        <span className="text-gray-400">N/A</span>
-                      )}
+                      {user?.dateofbirth || "N/A"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h2 className="text-sm font-medium text-gray-500">Role</h2>
+                    <p className="mt-1 text-sm text-gray-900 capitalize">
+                      {user?.role || "N/A"}
                     </p>
                   </div>
                 </div>

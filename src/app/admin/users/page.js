@@ -14,6 +14,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 8;
+  const [error, setError] = useState("");
 
   // Fetch users from the API
   const fetchUsers = async () => {
@@ -45,26 +46,19 @@ export default function UsersPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Check authentication
         const token = localStorage.getItem("authToken");
         if (!token) {
           router.push("/login");
           return;
         }
-
-        const [data, countData] = await Promise.all([
-          fetchUsers(),
-          adminAPI.getUsersCount(),
-        ]);
+        const data = await adminAPI.listUsers();
         setUsers(data);
-        setUserCount(countData.totalCount);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        setError("Failed to fetch users");
       } finally {
         setLoading(false);
       }
     };
-
     loadData();
   }, [router]);
 
@@ -149,6 +143,10 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">{error}</div>
+      )}
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -158,6 +156,12 @@ export default function UsersPage() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Phone
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date of Birth
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
@@ -172,46 +176,16 @@ export default function UsersPage() {
               .slice(indexOfFirstUser, indexOfLastUser)
               .map((user) => (
                 <tr key={user._id || user.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {editingId === user._id ? (
-                      <input
-                        type="text"
-                        name="name"
-                        value={editForm.name}
-                        onChange={handleEditChange}
-                        className="border rounded px-2 py-1"
-                      />
-                    ) : (
-                      user.name
-                    )}
+                    {user.phonenumber}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {editingId === user._id ? (
-                      <input
-                        type="email"
-                        name="email"
-                        value={editForm.email}
-                        onChange={handleEditChange}
-                        className="border rounded px-2 py-1"
-                      />
-                    ) : (
-                      user.email
-                    )}
+                    {user.dateofbirth}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {editingId === user._id ? (
-                      <select
-                        name="role"
-                        value={editForm.role}
-                        onChange={handleEditChange}
-                        className="border rounded px-2 py-1"
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    ) : (
-                      user.role
-                    )}
+                  <td className="px-6 py-4 whitespace-nowrap capitalize">
+                    {user.role}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {editingId === user._id ? (

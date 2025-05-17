@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { adminAPI } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { userAPI, adminAPI } from "@/lib/api";
 
 const initialForm = {
   adminemail: "",
@@ -9,35 +9,30 @@ const initialForm = {
 };
 
 export default function HotelsPage() {
-  const [hotels] = useState([
-    {
-      _id: 1,
-      name: "Grand Palace",
-      city: "New York",
-      rooms: 120,
-      status: "active",
-    },
-    { _id: 2, name: "Ocean View", city: "Miami", rooms: 80, status: "active" },
-    {
-      _id: 3,
-      name: "Mountain Retreat",
-      city: "Denver",
-      rooms: 60,
-      status: "inactive",
-    },
-    {
-      _id: 4,
-      name: "City Center Inn",
-      city: "Chicago",
-      rooms: 100,
-      status: "active",
-    },
-  ]);
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+
+  const fetchHotels = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await userAPI.listHotels();
+      setHotels(data);
+    } catch (err) {
+      setError("Failed to load hotels list");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHotels();
+  }, []);
 
   const handleOpenModal = () => {
     setForm(initialForm);
@@ -64,7 +59,7 @@ export default function HotelsPage() {
       await adminAPI.createHotel(form);
       setMessage("Hotel created successfully!");
       setShowModal(false);
-      // Optionally, refresh the hotels list here
+      await fetchHotels();
     } catch (err) {
       setError(err.message || "Failed to create hotel");
     } finally {
@@ -89,47 +84,40 @@ export default function HotelsPage() {
       {error && (
         <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">{error}</div>
       )}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                City
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Rooms
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {hotels.map((hotel) => (
-              <tr key={hotel._id}>
-                <td className="px-6 py-4 whitespace-nowrap">{hotel.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{hotel.city}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{hotel.rooms}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{hotel.status}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button className="text-indigo-600 hover:text-indigo-900 mr-2">
-                    Edit
-                  </button>
-                  <button className="text-red-600 hover:text-red-900">
-                    Delete
-                  </button>
-                </td>
+      {loading ? (
+        <div className="text-center text-gray-500">Loading hotels...</div>
+      ) : hotels.length === 0 ? (
+        <div className="text-center text-gray-500">No hotels found.</div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Place
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Admin Email
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {hotels.map((hotel) => (
+                <tr key={hotel.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">{hotel.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{hotel.place}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {hotel.adminemail}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">

@@ -5,6 +5,15 @@ import { userAPI } from "@/lib/api";
 import Link from "next/link";
 import UserNavbar from "@/components/UserNavbar";
 
+const mainImages = [
+  "1.jpg",
+  "2.jpg",
+  "3.jpg",
+  "4.jpg",
+  "5.jpg",
+  // Add more if you have more images
+];
+
 export default function UserHomePage() {
   const { user } = useAuth();
   const [hotels, setHotels] = useState([]);
@@ -51,30 +60,41 @@ export default function UserHomePage() {
             <div className="text-center text-gray-500">No hotels found.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {hotels.map((hotel) => (
-                <div
+              {hotels.map((hotel, idx) => (
+                <Link
+                  href={`/hotel/${hotel.id}`}
                   key={hotel.id}
-                  className="border rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition-shadow bg-gray-50"
+                  className="block"
                 >
-                  <div>
-                    <h3 className="text-xl font-bold text-indigo-700 mb-1">
-                      {hotel.name}
-                    </h3>
-                    <p className="text-gray-600 mb-2">{hotel.place}</p>
-                    <div className="flex items-center mb-2">
-                      <span className="text-yellow-500 mr-1">★</span>
-                      <span className="font-medium text-gray-700">4.5</span>
+                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                    <img
+                      src={`/images/hotels/main/${
+                        mainImages[idx % mainImages.length]
+                      }`}
+                      alt={hotel.name}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        e.target.src = "/images/hotels/main/1.jpg";
+                      }}
+                    />
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {hotel.name}
+                      </h3>
+                      <div className="flex items-center mb-2">
+                        {/* Dummy rating: 4 out of 5 stars */}
+                        {[...Array(4)].map((_, i) => (
+                          <span key={i} className="text-yellow-400">
+                            ★
+                          </span>
+                        ))}
+                        <span className="text-gray-300">★</span>
+                        <span className="ml-2 text-sm text-gray-600">4.0</span>
+                      </div>
+                      <p className="text-gray-600">{hotel.place}</p>
                     </div>
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                      Admin: {hotel.adminemail}
-                    </span>
                   </div>
-                  <Link href={`/hotel/${hotel.id}`} legacyBehavior>
-                    <a className="mt-4 w-full py-2 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors text-center block">
-                      View Details
-                    </a>
-                  </Link>
-                </div>
+                </Link>
               ))}
             </div>
           )}
