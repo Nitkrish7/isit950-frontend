@@ -20,7 +20,11 @@ import {
   FaChevronRight,
   FaTimes,
   FaPlus,
+  FaUserFriends,
+  FaArrowLeft,
 } from "react-icons/fa";
+import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 // Tag to icon mapping
 const tagIcons = {
@@ -40,6 +44,7 @@ const tagIcons = {
 
 export default function HotelDetailsPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -97,6 +102,115 @@ export default function HotelDetailsPage() {
     fetchHotelDetails();
   }, [id]);
 
+  // Review modal state
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+
+  // Add review handler
+  const handlePostReview = async (e) => {
+    e.preventDefault();
+    setReviewLoading(true);
+    setReviewError("");
+    try {
+      await userAPI.createReview({
+        hotelid: id,
+        description: reviewText,
+        rating: reviewRating,
+        userid: user?.id,
+      });
+      setReviewModalOpen(false);
+      setReviewText("");
+      setReviewRating(0);
+      // Refresh hotel details to show new review
+      const data = await userAPI.getHotelDetails(id);
+      setHotel(data);
+    } catch (err) {
+      setReviewError("Failed to post review");
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  // Availability modal state
+  const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [roomCount, setRoomCount] = useState(1);
+  const [numberOfGuests, setNumberOfGuests] = useState(1);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityResult, setAvailabilityResult] = useState(null);
+  const [availabilityError, setAvailabilityError] = useState("");
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [toast, setToast] = useState({ message: "", type: "" });
+
+  // Calculate room count based on guests and room capacity
+  const guestsPerRoom = selectedRoom?.no_of_guests || 1;
+  const calculatedRoomCount = Math.ceil(numberOfGuests / guestsPerRoom);
+
+  // Open modal for a room
+  const openAvailabilityModal = (room) => {
+    setSelectedRoom(room);
+    setAvailabilityModalOpen(true);
+    setCheckIn("");
+    setCheckOut("");
+    setNumberOfGuests(1);
+    setAvailabilityResult(null);
+    setAvailabilityError("");
+  };
+
+  // Check availability handler
+  const handleCheckAvailability = async (e) => {
+    e.preventDefault();
+    setAvailabilityLoading(true);
+    setAvailabilityResult(null);
+    setAvailabilityError("");
+    try {
+      const res = await userAPI.checkRoomAvailability({
+        roomId: selectedRoom.id || selectedRoom._id,
+        roomCount: calculatedRoomCount,
+        startDate: checkIn,
+        endDate: checkOut,
+      });
+      setAvailabilityResult(res.availability);
+    } catch (err) {
+      setAvailabilityError("Failed to check availability");
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  // Book room handler
+  const handleBookRoom = async () => {
+    setBookingLoading(true);
+    setToast({ message: "", type: "" });
+    try {
+      const res = await userAPI.createBooking({
+        roomid: selectedRoom.id || selectedRoom._id,
+        startdate: checkIn,
+        enddate: checkOut,
+        bookinguserid: user?.id,
+        hotelid: id,
+        booking_count: calculatedRoomCount,
+        no_of_guests: numberOfGuests,
+      });
+      setToast({ message: "Booking successful!", type: "success" });
+      setAvailabilityModalOpen(false);
+      setTimeout(() => setToast({ message: "", type: "" }), 3000);
+    } catch (err) {
+      setToast({
+        message: err.message || "Failed to book room",
+        type: "error",
+      });
+      setTimeout(() => setToast({ message: "", type: "" }), 3000);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
   if (!hotel) return <div>Hotel not found</div>;
@@ -144,10 +258,40 @@ export default function HotelDetailsPage() {
     <div className="min-h-screen bg-gray-50">
       <UserNavbar />
       <div className="max-w-5xl mx-auto p-4">
+        <Link
+          href="/home"
+          className="inline-flex items-center text-indigo-700 hover:text-indigo-900 mb-4 font-medium"
+        >
+          <FaArrowLeft className="mr-2" /> Back to Home
+        </Link>
+        {/* Toast Notification */}
+        {toast.message && (
+          <div
+            className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded shadow-lg text-white font-semibold transition-all
+              ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}
+          >
+            {toast.message}
+          </div>
+        )}
         <h1 className="text-3xl font-bold text-indigo-700 mb-2">
           {hotel.name}
         </h1>
         <p className="text-gray-600 mb-4">{hotel.place}</p>
+        {hotel.rating && (
+          <div className="flex items-center mb-4">
+            <span className="text-yellow-400 mr-2">
+              {Array.from({ length: hotel.rating }).map((_, i) => (
+                <span key={i}>★</span>
+              ))}
+              {Array.from({ length: 5 - hotel.rating }).map((_, i) => (
+                <span key={i} className="text-gray-300">
+                  ★
+                </span>
+              ))}
+            </span>
+            <span className="text-gray-600">{hotel.rating} / 5</span>
+          </div>
+        )}
         {/* Collage */}
         <div
           className="w-full max-w-full overflow-hidden mb-8 relative group cursor-pointer"
@@ -281,40 +425,55 @@ export default function HotelDetailsPage() {
         <div className="mb-10">
           <h2 className="text-2xl font-semibold text-indigo-700 mb-4">Rooms</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {dummyRooms.map((room) => {
+            {(hotel.room && hotel.room.length > 0
+              ? hotel.room
+              : dummyRooms
+            ).map((room, idx) => {
               // Pick a random image for each room
               const img =
                 roomImages[Math.floor(Math.random() * roomImages.length)];
+              // Use API data if available, else fallback to dummy
+              const roomName = room.name || room.type;
+              const guests = room.no_of_guests || 2; // fallback to 2 if not present
+              const price = room.price || 120; // fallback to dummy price
+              const status = room.status || "Available";
               return (
                 <div
-                  key={room.id}
+                  key={room.id || idx}
                   className="bg-white rounded-lg shadow p-6 flex flex-col justify-between"
                 >
                   <img
                     src={img}
-                    alt={room.type}
+                    alt={roomName}
                     className="w-full h-40 object-cover rounded-md mb-4"
                   />
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 mb-2">
-                      {room.type}
+                      {roomName}
                     </h3>
-                    <p className="text-gray-600 mb-2">
-                      {room.status === "Available" ? "Available" : "Occupied"}
-                    </p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaUserFriends className="text-indigo-600 text-lg" />
+                      <span className="text-gray-600">
+                        {guests} guest{guests > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    {/* <p className="text-gray-600 mb-2">
+                      {status === "Available" ? "Available" : "Occupied"}
+                    </p> */}
                     <p className="text-indigo-700 font-semibold text-xl mb-4">
-                      ${room.price} / night
+                      ${price} / night
                     </p>
                   </div>
                   <button
                     className={`mt-auto px-4 py-2 rounded font-medium text-white transition-colors ${
-                      room.status === "Available"
+                      status === "Available"
                         ? "bg-indigo-600 hover:bg-indigo-700"
                         : "bg-gray-400 cursor-not-allowed"
                     }`}
-                    disabled={room.status !== "Available"}
+                    // disabled={status !== "Available"}
+                    onClick={() => openAvailabilityModal(room)}
                   >
-                    Book Now
+                    Check Availability
                   </button>
                 </div>
               );
@@ -323,18 +482,22 @@ export default function HotelDetailsPage() {
         </div>
         {/* Reviews Section */}
         <div className="mb-10">
-          <h2 className="text-2xl font-semibold text-indigo-700 mb-4">
-            Reviews
-          </h2>
-          {dummyReviews.length === 0 ? (
-            <p className="text-gray-500 italic">No reviews yet.</p>
-          ) : (
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-indigo-700">Reviews</h2>
+            <button
+              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+              onClick={() => setReviewModalOpen(true)}
+            >
+              Add Review
+            </button>
+          </div>
+          {hotel.reviews && hotel.reviews.length > 0 ? (
             <div className="space-y-6">
-              {dummyReviews.map((review) => (
+              {hotel.reviews.map((review) => (
                 <div key={review.id} className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center mb-2">
                     <span className="font-bold text-gray-800 mr-2">
-                      {review.name}
+                      {review.user.name}
                     </span>
                     <span className="text-yellow-400 mr-2">
                       {Array.from({ length: review.rating }).map((_, i) => (
@@ -346,15 +509,167 @@ export default function HotelDetailsPage() {
                         </span>
                       ))}
                     </span>
-                    <span className="text-gray-400 text-sm">{review.date}</span>
                   </div>
-                  <p className="text-gray-700">{review.comment}</p>
+                  <p className="text-gray-700">{review.description}</p>
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-gray-500 italic">No reviews yet.</p>
+          )}
+          {/* Review Modal */}
+          {reviewModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <form
+                className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative"
+                onSubmit={handlePostReview}
+              >
+                <button
+                  type="button"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
+                  onClick={() => setReviewModalOpen(false)}
+                >
+                  &times;
+                </button>
+                <h3 className="text-xl font-bold mb-4">Add Your Review</h3>
+                <label className="block mb-2 font-medium">Your Rating</label>
+                <div className="flex items-center mb-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`text-2xl cursor-pointer ${
+                        reviewRating >= star
+                          ? "text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                      onClick={() => setReviewRating(star)}
+                      data-testid={`star-${star}`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <label className="block mb-2 font-medium">Your Review</label>
+                <textarea
+                  className="w-full border border-gray-300 rounded p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows={4}
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  required
+                  placeholder="Share your experience..."
+                />
+                {reviewError && (
+                  <div className="mb-2 text-red-600">{reviewError}</div>
+                )}
+                <button
+                  type="submit"
+                  className="w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                  disabled={reviewLoading || !reviewText || !reviewRating}
+                >
+                  {reviewLoading ? "Posting..." : "Post Review"}
+                </button>
+              </form>
+            </div>
           )}
         </div>
+        {/* Availability Modal */}
+        {availabilityModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <form
+              className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative"
+              onSubmit={handleCheckAvailability}
+            >
+              <button
+                type="button"
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
+                onClick={() => setAvailabilityModalOpen(false)}
+              >
+                &times;
+              </button>
+              <h3 className="text-xl font-bold mb-4">
+                Check Room Availability
+              </h3>
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Check-in Date</label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded p-2"
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Check-out Date</label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded p-2"
+                  value={checkOut}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">
+                  Number of Guests
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full border border-gray-300 rounded p-2"
+                  value={numberOfGuests}
+                  onChange={(e) => setNumberOfGuests(Number(e.target.value))}
+                  required
+                />
+                <div className="text-sm text-gray-500 mt-1">
+                  {`This will book ${calculatedRoomCount} room${
+                    calculatedRoomCount > 1 ? "s" : ""
+                  } (max ${guestsPerRoom} guest${
+                    guestsPerRoom > 1 ? "s" : ""
+                  } per room)`}
+                </div>
+              </div>
+              {availabilityError && (
+                <div className="mb-2 text-red-600">{availabilityError}</div>
+              )}
+              {availabilityResult !== null && (
+                <div
+                  className={`mb-4 text-lg font-semibold ${
+                    availabilityResult ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {availabilityResult
+                    ? "Room is available!"
+                    : "Room is not available for the selected dates."}
+                </div>
+              )}
+              {availabilityResult && (
+                <button
+                  type="button"
+                  className="w-full py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 transition mb-2"
+                  onClick={handleBookRoom}
+                  disabled={bookingLoading}
+                >
+                  {bookingLoading ? "Booking..." : "Book Now"}
+                </button>
+              )}
+              <button
+                type="submit"
+                className="w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                disabled={
+                  availabilityLoading ||
+                  !checkIn ||
+                  !checkOut ||
+                  !numberOfGuests
+                }
+              >
+                {availabilityLoading ? "Checking..." : "Check Availability"}
+              </button>
+            </form>
+          </div>
+        )}
         {/* Image Slider Modal */}
+
         {sliderOpen && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"

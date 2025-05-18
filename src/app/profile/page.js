@@ -6,6 +6,8 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/context/AuthContext";
 import { userAPI } from "@/lib/api";
 import UserNavbar from "@/components/UserNavbar";
+import Link from "next/link";
+import { FaArrowLeft } from "react-icons/fa";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -27,7 +29,6 @@ export default function ProfilePage() {
           return;
         }
         await fetchUser(email);
-        setEditData(user || {});
       } catch (err) {
         setError("Failed to load user data");
       } finally {
@@ -35,7 +36,11 @@ export default function ProfilePage() {
       }
     };
     loadData();
-  }, [router, fetchUser]);
+  }, []);
+
+  useEffect(() => {
+    setEditData(user || {});
+  }, [user]);
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
@@ -78,6 +83,14 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <UserNavbar />
+      <div className="max-w-3xl mx-auto py-4 px-4">
+        <Link
+          href="/home"
+          className="inline-flex items-center text-indigo-700 hover:text-indigo-900 mb-4 font-medium"
+        >
+          <FaArrowLeft className="mr-2" /> Back to Home
+        </Link>
+      </div>
       <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow rounded-lg overflow-hidden">
           {/* Error Toast */}

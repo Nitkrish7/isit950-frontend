@@ -9,8 +9,6 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [userCount, setUserCount] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 8;
@@ -25,22 +23,6 @@ export default function UsersPage() {
       console.error("Error fetching users:", error);
       throw error;
     }
-  };
-
-  const updateUser = async (userId, updatedData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ ...updatedData, id: userId });
-      }, 500);
-    });
-  };
-
-  const deleteUser = async (userId) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, 300);
-    });
   };
 
   useEffect(() => {
@@ -62,48 +44,23 @@ export default function UsersPage() {
     loadData();
   }, [router]);
 
-  const handleEdit = (user) => {
-    setEditingId(user._id || user.id);
-    setEditForm({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      status: user.status,
-    });
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = async (userId) => {
-    try {
-      const updatedUser = await updateUser(userId, editForm);
-      setUsers(
-        users.map((user) =>
-          user._id === userId ? { ...user, ...updatedUser } : user
-        )
-      );
-      setEditingId(null);
-    } catch (error) {
-      console.error("Error updating user:", error);
-    }
-  };
-
   const handleDelete = async (userId) => {
-    if (confirm("Are you sure you want to delete this user?")) {
+    const user = users.find((u) => u._id === userId || u.id === userId);
+    if (!user) return;
+    if (
+      confirm(
+        `Are you sure you want to delete user ${user.name} (${user.email})? This action cannot be undone.`
+      )
+    ) {
       try {
-        await deleteUser(userId);
-        setUsers(users.filter((user) => user._id !== userId));
+        await adminAPI.deleteUser(user.email);
+        const updatedUsers = await fetchUsers();
+        setUsers(updatedUsers);
       } catch (error) {
         console.error("Error deleting user:", error);
+        alert("Failed to delete user. Please try again.");
       }
     }
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
   };
 
   // Filter users based on search term
@@ -188,37 +145,14 @@ export default function UsersPage() {
                     {user.role}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {editingId === user._id ? (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleSave(user._id)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={handleCancel}
-                          className="text-gray-600 hover:text-gray-900"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user._id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleDelete(user._id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

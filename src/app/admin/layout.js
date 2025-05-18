@@ -76,7 +76,7 @@ export default function AdminLayout({ children }) {
       </div>
 
       {/* Main Content */}
-      <div className="ml-64">
+      <div className="32">
         {/* Top Navigation */}
         <header className="bg-white shadow">
           <div className="flex justify-between items-center px-6 py-4">

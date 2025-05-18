@@ -45,19 +45,38 @@ export const authAPI = {
 
 // User API methods
 export const userAPI = {
-  getProfile: (email) => api.get(`/user/fetch/?email=${email}`),
+  getProfile: (email) => api.get(`/user/fetch/${email}`),
   updateProfile: (userData) => api.put("/user/update", userData),
   listHotels: () => api.get("/hotels/list"),
   getHotelDetails: (id) => api.get(`/hotels/fetch/${id}`),
+  createReview: (reviewData) => api.post("/hotels/review/create", reviewData),
+  checkRoomAvailability: (data) => api.put("/booking/availability/fetch", data),
+  createBooking: (bookingData) => api.post("/booking/create", bookingData),
+  listBookings: (userid) => api.get(`/booking/list/${userid}`),
+  listFavourites: (userid) => api.get(`/user/favourites/fetch/${userid}`),
+  searchHotels: (keywords) => api.put("/hotels/search", { keywords }),
+  forgotPassword: (email) => api.put("/auth/password/forgot", { email }),
 };
 
 // Admin API methods
 export const adminAPI = {
   listUsers: () => api.get("/admin/users/list"),
-  deleteUser: (email) => api.delete("/admin/user/delete", { data: { email } }),
+  deleteUser: (email) =>
+    api.delete("/admin/user/delete", { data: { userEmail: email } }),
   getUsersCount: () => api.get("/admin/users/count"),
   getHotelsCount: () => api.get("/admin/hotels/count"),
   createHotel: (hotelData) => api.post("/admin/hotel/create", hotelData),
+  requestOnboard: (data) => api.post("/admin/onboard/request", data),
+  listOnboardRequests: () => api.get("/admin/onboard/request/list"),
+  createRoom: (roomData) => api.post("/admin/room/create", roomData),
+  updateRoom: (roomData) => api.put("/admin/room/update", roomData),
+  listRooms: (hotelid) => api.get(`/rooms/list/${hotelid}`),
+  getHotelIdByAdmin: (adminid) => api.get(`/hotels/id/fetch/${adminid}`),
+  listBookingsByHotel: (hotelid) => api.get(`/admin/booking/list/${hotelid}`),
+  getHotelDetails: (hotelid) => api.get(`/hotels/fetch/${hotelid}`),
+  updateHotel: (hotelData) => api.put("/admin/hotel/update", hotelData),
+  deleteRoom: (roomId) =>
+    api.delete("/admin/room/delete", { data: { roomId } }),
 };
 
 export default api;

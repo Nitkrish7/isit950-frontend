@@ -27,7 +27,7 @@ export default function LoginForm() {
       if (result.success) {
         if (result.role == "superuser") {
           router.push("/admin/dashboard");
-        } else if (result.role == "hoteladmin") {
+        } else if (result.role == "admin") {
           router.push("/admin/hotel/dashboard");
         } else if (result.role == "user") {
           router.push("/home");

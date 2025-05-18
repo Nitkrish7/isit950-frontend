@@ -44,6 +44,24 @@ export default function UserNavbar({ back = false }) {
           </button>
         )}
         <div className="text-2xl font-bold text-indigo-700">Staytion</div>
+        <Link
+          href="/home"
+          className="ml-8 text-gray-700 hover:text-indigo-700 font-medium"
+        >
+          Home
+        </Link>
+        <Link
+          href="/favourites"
+          className="ml-4 text-gray-700 hover:text-indigo-700 font-medium"
+        >
+          Favourites
+        </Link>
+        <Link
+          href="/bookings"
+          className="ml-4 text-gray-700 hover:text-indigo-700 font-medium"
+        >
+          Bookings
+        </Link>
       </div>
       <div
         className="relative"

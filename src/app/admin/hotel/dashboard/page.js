@@ -40,7 +40,7 @@ export default function HotelAdminDashboard() {
           <p className="text-2xl font-semibold text-gray-900">28</p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-sm font-medium text-gray-500">Today's Bookings</p>
+          <p className="text-sm font-medium text-gray-500">Total Bookings</p>
           <p className="text-2xl font-semibold text-gray-900">5</p>
         </div>
       </div>

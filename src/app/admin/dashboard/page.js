@@ -32,7 +32,7 @@ export default function AdminDashboard() {
           activeUsers: 892, // keep mock for now
           totalHotels: hotelCountData.totalCount,
           occupiedRooms: 342,
-          availableRooms: 128,
+          totalBookings: 128,
           revenue: 125640,
         });
       } catch (error) {
@@ -89,8 +89,8 @@ export default function AdminDashboard() {
           percentage="8%"
         />
         <StatCard
-          title="Available Rooms"
-          value={stats.availableRooms}
+          title="Total Bookings"
+          value={stats.totalBookings}
           icon="bed"
           trend="down"
           percentage="3%"
