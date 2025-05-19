@@ -1,13 +1,22 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/context/AuthContext";
 import { userAPI } from "@/lib/api";
 import UserNavbar from "@/components/UserNavbar";
+import {
+  FiArrowLeft,
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiCalendar,
+  FiEdit2,
+  FiX,
+  FiCheck,
+} from "react-icons/fi";
+import { FaUserShield } from "react-icons/fa";
+import { format } from "date-fns";
 import Link from "next/link";
-import { FaArrowLeft } from "react-icons/fa";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -17,7 +26,6 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [showError, setShowError] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -76,70 +84,104 @@ export default function ProfilePage() {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      return format(new Date(dateString), "MMMM d, yyyy");
+    } catch {
+      return dateString;
+    }
+  };
+
   if (isLoading || loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <UserNavbar />
-      <div className="max-w-3xl mx-auto py-4 px-4">
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back Button */}
         <Link
           href="/home"
-          className="inline-flex items-center text-indigo-700 hover:text-indigo-900 mb-4 font-medium"
+          className="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-6 font-medium transition-colors"
         >
-          <FaArrowLeft className="mr-2" /> Back to Home
+          <FiArrowLeft className="mr-2" />
+          Back to Home
         </Link>
-      </div>
-      <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          {/* Error Toast */}
-          {error && showError && (
-            <div className="mb-4 flex items-center justify-between p-4 text-sm text-red-700 bg-red-100 rounded-lg">
-              <span>{error}</span>
-              <button
-                onClick={() => setShowError(false)}
-                className="ml-4 px-2 py-1 text-xs bg-red-200 text-red-800 rounded hover:bg-red-300"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
+
+        {/* Profile Card */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
           {/* Profile Header */}
-          <div className="bg-indigo-700 px-6 py-8 sm:px-10 sm:py-12">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-8 sm:px-8 sm:py-10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">User Profile</h1>
-                <p className="mt-1 text-indigo-200">
-                  Manage your account information
+                <h1 className="text-2xl font-bold text-white">My Profile</h1>
+                <p className="mt-1 text-blue-100">
+                  Manage your personal information and settings
                 </p>
               </div>
               <button
                 onClick={handleEditToggle}
-                className="px-4 py-2 bg-white text-indigo-700 rounded-md font-medium hover:bg-indigo-50 transition-colors"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isEditing
+                    ? "bg-red-100 text-red-700 hover:bg-red-200"
+                    : "bg-white text-indigo-700 hover:bg-indigo-50"
+                }`}
                 disabled={!user}
               >
-                {isEditing ? "Cancel" : "Edit Profile"}
+                {isEditing ? (
+                  <>
+                    <FiX className="w-4 h-4" />
+                    Cancel
+                  </>
+                ) : (
+                  <>
+                    <FiEdit2 className="w-4 h-4" />
+                    Edit Profile
+                  </>
+                )}
               </button>
             </div>
           </div>
 
           {/* Profile Content */}
-          <div className="px-6 py-8 sm:px-10 sm:py-12">
+          <div className="p-6 sm:p-8">
+            {/* Messages */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                <div className="flex items-center">
+                  <FiAlertCircle className="h-5 w-5 text-red-500 mr-3" />
+                  <span className="text-red-700">{error}</span>
+                </div>
+              </div>
+            )}
+
             {success && (
-              <div className="mb-6 p-4 text-sm text-green-700 bg-green-100 rounded-lg">
-                {success}
+              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
+                <div className="flex items-center">
+                  <FiCheck className="h-5 w-5 text-green-500 mr-3" />
+                  <span className="text-green-700">{success}</span>
+                </div>
               </div>
             )}
 
             {isEditing ? (
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-                  <div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {/* Name Field */}
+                  <div className="space-y-2">
                     <label
                       htmlFor="name"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
                     >
+                      <FiUser className="text-gray-400" />
                       Full Name
                     </label>
                     <input
@@ -148,16 +190,18 @@ export default function ProfilePage() {
                       id="name"
                       value={editData.name || ""}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     />
                   </div>
 
-                  <div>
+                  {/* Email Field */}
+                  <div className="space-y-2">
                     <label
                       htmlFor="email"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
                     >
+                      <FiMail className="text-gray-400" />
                       Email
                     </label>
                     <input
@@ -166,17 +210,19 @@ export default function ProfilePage() {
                       id="email"
                       value={editData.email || ""}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      required
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-100 cursor-not-allowed"
                       disabled
+                      required
                     />
                   </div>
 
-                  <div>
+                  {/* Phone Field */}
+                  <div className="space-y-2">
                     <label
                       htmlFor="phonenumber"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
                     >
+                      <FiPhone className="text-gray-400" />
                       Phone Number
                     </label>
                     <input
@@ -185,16 +231,18 @@ export default function ProfilePage() {
                       id="phonenumber"
                       value={editData.phonenumber || ""}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     />
                   </div>
 
-                  <div>
+                  {/* Date of Birth Field */}
+                  <div className="space-y-2">
                     <label
                       htmlFor="dateofbirth"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
                     >
+                      <FiCalendar className="text-gray-400" />
                       Date of Birth
                     </label>
                     <input
@@ -204,66 +252,109 @@ export default function ProfilePage() {
                       value={editData.dateofbirth || ""}
                       onChange={handleInputChange}
                       placeholder="DD/MM/YYYY"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    className={`flex items-center gap-2 px-6 py-2 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                      isLoading ? "opacity-70 cursor-not-allowed" : ""
                     }`}
                   >
-                    {isLoading ? "Saving..." : "Save Changes"}
+                    {isLoading ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FiCheck className="w-4 h-4" />
+                        Save Changes
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {/* Name Field */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                      <FiUser className="text-gray-400" />
                       Full Name
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-900">
+                    </div>
+                    <div className="text-gray-900 font-medium">
                       {user?.name || "N/A"}
-                    </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">Email</h2>
-                    <p className="mt-1 text-sm text-gray-900">
+                  {/* Email Field */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                      <FiMail className="text-gray-400" />
+                      Email
+                    </div>
+                    <div className="text-gray-900 font-medium">
                       {user?.email || "N/A"}
-                    </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">
+                  {/* Phone Field */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                      <FiPhone className="text-gray-400" />
                       Phone Number
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-900">
+                    </div>
+                    <div className="text-gray-900 font-medium">
                       {user?.phonenumber || "N/A"}
-                    </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">
+                  {/* Date of Birth Field */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                      <FiCalendar className="text-gray-400" />
                       Date of Birth
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {user?.dateofbirth || "N/A"}
-                    </p>
+                    </div>
+                    <div className="text-gray-900 font-medium">
+                      {formatDate(user?.dateofbirth)}
+                    </div>
                   </div>
 
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">Role</h2>
-                    <p className="mt-1 text-sm text-gray-900 capitalize">
+                  {/* Role Field */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                      <FaUserShield className="text-gray-400" />
+                      Role
+                    </div>
+                    <div className="text-gray-900 font-medium capitalize">
                       {user?.role || "N/A"}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>

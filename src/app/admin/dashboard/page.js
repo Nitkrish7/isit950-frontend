@@ -6,124 +6,181 @@ import { adminAPI } from "@/lib/api";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalUsers: 1254,
+    totalHotels: 87,
+    totalBookings: 342,
+    occupancyRate: 0.769,
+    totalRevenue: 125430,
+    totalGuestsServed: 2543,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Check authentication
         const token = localStorage.getItem("authToken");
         if (!token) {
           router.push("/login");
           return;
         }
-
-        // Fetch real user and hotel counts from backend
-        const [userCountData, hotelCountData] = await Promise.all([
-          adminAPI.getUsersCount(),
-          adminAPI.getHotelsCount(),
-        ]);
-        // Simulate API call for other stats (replace with real API as needed)
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
-        setStats({
-          totalUsers: userCountData.totalCount,
-          activeUsers: 892, // keep mock for now
-          totalHotels: hotelCountData.totalCount,
-          occupiedRooms: 342,
-          totalBookings: 128,
-          revenue: 125640,
-        });
+        // Simulated API call - replace with actual API call
+        // const res = await adminAPI.getSuperuserStats();
+        // setStats(res);
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        setError("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
     };
-
     fetchStats();
   }, [router]);
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
-  if (!stats) {
-    return <div className="text-red-500">Failed to load dashboard data</div>;
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
+          <div className="text-red-500 mb-4">
+            <svg
+              className="w-12 h-12 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">
+            Error Loading Dashboard
+          </h2>
+          <p className="text-gray-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Dashboard Overview
-      </h1>
+    <div className="p-6 md:p-8 lg:p-10">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+            Dashboard Overview
+          </h1>
+          <p className="text-gray-600 mt-2">Key metrics and recent activity</p>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard
-          title="Total Users"
-          value={stats.totalUsers}
-          icon="users"
-          trend="up"
-          percentage="12%"
-        />
-        <StatCard
-          title="Active Users"
-          value={stats.activeUsers}
-          icon="activeUsers"
-          trend="up"
-          percentage="5%"
-        />
-        <StatCard
-          title="Total Hotels"
-          value={stats.totalHotels}
-          icon="hotel"
-          trend="steady"
-        />
-        <StatCard
-          title="Occupied Rooms"
-          value={stats.occupiedRooms}
-          icon="bed"
-          trend="up"
-          percentage="8%"
-        />
-        <StatCard
-          title="Total Bookings"
-          value={stats.totalBookings}
-          icon="bed"
-          trend="down"
-          percentage="3%"
-        />
-        <StatCard
-          title="Revenue (USD)"
-          value={`$${stats.revenue.toLocaleString()}`}
-          icon="dollar"
-          trend="up"
-          percentage="15%"
-        />
-      </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          <StatCard
+            title="Total Users"
+            value={stats.totalUsers.toLocaleString()}
+            icon="users"
+            trend="up"
+            change="+12% from last month"
+          />
+          <StatCard
+            title="Total Hotels"
+            value={stats.totalHotels.toLocaleString()}
+            icon="hotel"
+            trend="steady"
+            change="No change from last month"
+          />
+          <StatCard
+            title="Total Bookings"
+            value={stats.totalBookings.toLocaleString()}
+            icon="bed"
+            trend="up"
+            change="+24% from last month"
+          />
+          <StatCard
+            title="Occupancy Rate"
+            value={`${(stats.occupancyRate * 100).toFixed(1)}%`}
+            icon="chart"
+            trend="up"
+            change="+5% from last month"
+          />
+          <StatCard
+            title="Total Revenue"
+            value={`$${stats.totalRevenue.toLocaleString()}`}
+            icon="dollar"
+            trend="up"
+            change="+18% from last month"
+          />
+          <StatCard
+            title="Guests Served"
+            value={stats.totalGuestsServed.toLocaleString()}
+            icon="users"
+            trend="up"
+            change="+15% from last month"
+          />
+        </div>
 
-      {/* Recent Activity Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-        <div className="text-gray-500">
-          <p>Coming soon...</p>
+        {/* Recent Activity Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Recent Activity
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <svg
+                className="w-16 h-16 text-gray-400 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">
+                Activity feed coming soon
+              </h3>
+              <p className="text-gray-500 max-w-md">
+                We're working on bringing you a comprehensive view of recent
+                system activity.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// StatCard Component
-function StatCard({ title, value, icon, trend, percentage }) {
+function StatCard({ title, value, icon, trend, change }) {
   const iconClasses = {
     users:
-      "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
-    activeUsers:
-      "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+      "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
     hotel: "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z",
-    bed: "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z",
+    bed: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+    chart:
+      "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
     dollar:
       "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   };
@@ -135,19 +192,41 @@ function StatCard({ title, value, icon, trend, percentage }) {
   };
 
   const trendIcons = {
-    up: "M5 10l7-7m0 0l7 7m-7-7v18",
-    down: "M19 14l-7 7m0 0l-7-7m7 7V3",
+    up: "M5 15l7-7 7 7",
+    down: "M19 9l-7 7-7-7",
     steady: "M5 12h14",
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+            {title}
+          </p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          {change && (
+            <p
+              className={`text-xs mt-2 flex items-center ${trendColors[trend]}`}
+            >
+              <svg
+                className="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d={trendIcons[trend]}
+                />
+              </svg>
+              {change}
+            </p>
+          )}
         </div>
-        <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+        <div className={`p-3 rounded-lg ${trendColors[trend]} bg-opacity-10`}>
           <svg
             className="w-6 h-6"
             fill="none"
@@ -163,31 +242,6 @@ function StatCard({ title, value, icon, trend, percentage }) {
           </svg>
         </div>
       </div>
-      {trend && (
-        <div className="mt-4 flex items-center">
-          <svg
-            className={`w-4 h-4 ${trendColors[trend]}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d={trendIcons[trend]}
-            />
-          </svg>
-          <span className={`ml-1 text-sm ${trendColors[trend]}`}>
-            {percentage ||
-              (trend === "up"
-                ? "Increased"
-                : trend === "down"
-                ? "Decreased"
-                : "No change")}
-          </span>
-        </div>
-      )}
     </div>
   );
 }

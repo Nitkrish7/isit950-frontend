@@ -34,26 +34,26 @@ export default function HotelBookingsPage() {
           {error}
         </div>
       )}
-      <div className="bg-white rounded-lg shadow overflow-x-auto w-full max-w-4xl mx-auto">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
+      <div className="bg-white rounded-lg shadow overflow-hidden w-full mx-auto">
+        <table className="w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                 Booking Name
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                 Room Name
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                 Start Date
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                 End Date
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                 Room Count
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                 Guests
               </th>
             </tr>
@@ -71,24 +71,20 @@ export default function HotelBookingsPage() {
             ) : (
               bookings.map((booking) => (
                 <tr key={booking.id}>
-                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4">
                     {booking.user?.name || "-"}
                   </td>
-                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4">
                     {booking.room?.name || "-"}
                   </td>
-                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4">
                     {new Date(booking.startdate).toLocaleString()}
                   </td>
-                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4">
                     {new Date(booking.enddate).toLocaleString()}
                   </td>
-                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                    {booking.booking_count}
-                  </td>
-                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                    {booking.no_of_guests}
-                  </td>
+                  <td className="px-4 sm:px-6 py-4">{booking.booking_count}</td>
+                  <td className="px-4 sm:px-6 py-4">{booking.no_of_guests}</td>
                 </tr>
               ))
             )}

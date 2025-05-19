@@ -1,55 +1,150 @@
 // app/admin/hotel/dashboard/page.js
 "use client";
 import { useState, useEffect } from "react";
-import StatCard from "@/components/StatCard";
+import { useHotelAdmin } from "@/context/HotelAdminContext";
+import { adminAPI } from "@/lib/api";
 import HotelAdminNavbar from "@/components/HotelAdminNavbar";
 
 export default function HotelAdminDashboard() {
+  const { hotelId, loading: contextLoading } = useHotelAdmin();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [upcoming, setUpcoming] = useState([]);
+  const [upcomingLoading, setUpcomingLoading] = useState(true);
+  const [upcomingError, setUpcomingError] = useState("");
 
-  // Mock data fetch for hotel-specific stats
   useEffect(() => {
+    if (!hotelId) return;
     const fetchStats = async () => {
-      setTimeout(() => {
-        setStats({
-          totalRooms: 42,
-          occupied: 28,
-          revenue: 12500,
-          bookingsToday: 5,
-          averageRating: 4.2,
-        });
+      setLoading(true);
+      setError("");
+      try {
+        const res = await adminAPI.getHotelAdminStats(hotelId);
+        setStats(res);
+      } catch (err) {
+        setError("Failed to load dashboard stats");
+      } finally {
         setLoading(false);
-      }, 800);
+      }
+    };
+    const fetchUpcoming = async () => {
+      setUpcomingLoading(true);
+      setUpcomingError("");
+      try {
+        const res = await adminAPI.getUpcomingBookings(hotelId);
+        setUpcoming(res);
+      } catch (err) {
+        setUpcomingError("Failed to load upcoming bookings");
+      } finally {
+        setUpcomingLoading(false);
+      }
     };
     fetchStats();
-  }, []);
+    fetchUpcoming();
+  }, [hotelId]);
 
-  if (loading) return <div>Loading...</div>;
+  if (contextLoading || loading) return <div className="p-8">Loading...</div>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-blue-800 mb-6">Hotel Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 mb-6 sm:mb-8">
+        Hotel Dashboard
+      </h1>
+      {error && (
+        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded max-w-xl w-full">
+          {error}
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
           <p className="text-sm font-medium text-gray-500">Total Rooms</p>
-          <p className="text-2xl font-semibold text-gray-900">42</p>
+          <p className="text-2xl font-semibold text-gray-900">
+            {stats?.totalRooms ?? "-"}
+          </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
           <p className="text-sm font-medium text-gray-500">Occupied Rooms</p>
-          <p className="text-2xl font-semibold text-gray-900">28</p>
+          <p className="text-2xl font-semibold text-gray-900">
+            {stats?.occupiedRooms ?? "-"}
+          </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
           <p className="text-sm font-medium text-gray-500">Total Bookings</p>
-          <p className="text-2xl font-semibold text-gray-900">5</p>
+          <p className="text-2xl font-semibold text-gray-900">
+            {stats?.totalBookings ?? "-"}
+          </p>
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-6 max-w-4xl mx-auto mb-8">
         <h2 className="text-xl font-semibold mb-4">Welcome, Hotel Admin!</h2>
         <p className="text-gray-600">
           Here you can manage your rooms, view bookings, and monitor your
           hotel's performance.
         </p>
+      </div>
+      <div className="bg-white rounded-lg shadow p-6 max-w-4xl mx-auto">
+        <h2 className="text-lg font-semibold mb-4">Upcoming Bookings</h2>
+        {upcomingLoading ? (
+          <div className="text-gray-500">Loading upcoming bookings...</div>
+        ) : upcomingError ? (
+          <div className="mb-2 p-2 bg-red-100 text-red-700 rounded">
+            {upcomingError}
+          </div>
+        ) : upcoming.length === 0 ? (
+          <div className="text-gray-500">No upcoming bookings found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Booking Name
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Room Name
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Start Date
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    End Date
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Room Count
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Guests
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {upcoming.map((booking) => (
+                  <tr key={booking.id}>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      {booking.user?.name || "-"}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      {booking.room?.name || "-"}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      {new Date(booking.startdate).toLocaleString()}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      {new Date(booking.enddate).toLocaleString()}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      {booking.booking_count}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      {booking.no_of_guests}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -56,6 +56,8 @@ export const userAPI = {
   listFavourites: (userid) => api.get(`/user/favourites/fetch/${userid}`),
   searchHotels: (keywords) => api.put("/hotels/search", { keywords }),
   forgotPassword: (email) => api.put("/auth/password/forgot", { email }),
+  addToFavourites: (userId, hotelId) =>
+    api.post("/user/addtofavourites", { userId, hotelId }),
 };
 
 // Admin API methods
@@ -77,6 +79,11 @@ export const adminAPI = {
   updateHotel: (hotelData) => api.put("/admin/hotel/update", hotelData),
   deleteRoom: (roomId) =>
     api.delete("/admin/room/delete", { data: { roomId } }),
+  getHotelAdminStats: (hotelid) =>
+    api.get(`/admin/hoteladmin/stats/${hotelid}`),
+  getUpcomingBookings: (hotelid) =>
+    api.get(`/admin/upcomingbookings/${hotelid}`),
+  getSuperuserStats: () => api.get("/admin/superuser/stats"),
 };
 
 export default api;

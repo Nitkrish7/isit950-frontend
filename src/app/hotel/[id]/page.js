@@ -22,9 +22,16 @@ import {
   FaPlus,
   FaUserFriends,
   FaArrowLeft,
+  FaStar,
+  FaRegStar,
+  FaMapMarkerAlt,
+  FaBed,
+  FaCalendarAlt,
+  FaUsers,
 } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import Image from "next/image";
 
 // Tag to icon mapping
 const tagIcons = {
@@ -48,7 +55,6 @@ export default function HotelDetailsPage() {
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // For now, use static images, but structure for future dynamic support
   const images = Array.from(
     { length: 8 },
     (_, i) => `/images/hotels/details/${i + 1}.jpg`
@@ -83,7 +89,6 @@ export default function HotelDetailsPage() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-    // eslint-disable-next-line
   }, [sliderOpen, images.length]);
 
   useEffect(() => {
@@ -124,7 +129,6 @@ export default function HotelDetailsPage() {
       setReviewModalOpen(false);
       setReviewText("");
       setReviewRating(0);
-      // Refresh hotel details to show new review
       const data = await userAPI.getHotelDetails(id);
       setHotel(data);
     } catch (err) {
@@ -211,21 +215,29 @@ export default function HotelDetailsPage() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
-  if (!hotel) return <div>Hotel not found</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600">
+        {error}
+      </div>
+    );
+  if (!hotel)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Hotel not found
+      </div>
+    );
 
   // Collage: 1 large + 4 small (show overlay if more images)
   const mainImage = images[0];
   const collageImages = images.slice(1, 5);
   const extraCount = images.length - 5;
-
-  // Dummy room data
-  const dummyRooms = [
-    { id: 1, type: "Deluxe Room", price: 120, status: "Available" },
-    { id: 2, type: "Suite", price: 200, status: "Available" },
-    { id: 3, type: "Standard Room", price: 90, status: "Occupied" },
-  ];
 
   // Room images
   const roomImages = [
@@ -257,426 +269,642 @@ export default function HotelDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <UserNavbar />
-      <div className="max-w-5xl mx-auto p-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Link
           href="/home"
-          className="inline-flex items-center text-indigo-700 hover:text-indigo-900 mb-4 font-medium"
+          className="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-6 font-medium transition-colors duration-200"
         >
           <FaArrowLeft className="mr-2" /> Back to Home
         </Link>
+
         {/* Toast Notification */}
         {toast.message && (
           <div
-            className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded shadow-lg text-white font-semibold transition-all
+            className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-semibold transition-all animate-fade-in
               ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}
           >
             {toast.message}
           </div>
         )}
-        <h1 className="text-3xl font-bold text-indigo-700 mb-2">
-          {hotel.name}
-        </h1>
-        <p className="text-gray-600 mb-4">{hotel.place}</p>
-        {hotel.rating && (
-          <div className="flex items-center mb-4">
-            <span className="text-yellow-400 mr-2">
-              {Array.from({ length: hotel.rating }).map((_, i) => (
-                <span key={i}>★</span>
-              ))}
-              {Array.from({ length: 5 - hotel.rating }).map((_, i) => (
-                <span key={i} className="text-gray-300">
-                  ★
-                </span>
-              ))}
-            </span>
-            <span className="text-gray-600">{hotel.rating} / 5</span>
-          </div>
-        )}
-        {/* Collage */}
-        <div
-          className="w-full max-w-full overflow-hidden mb-8 relative group cursor-pointer"
-          onClick={() => openSlider(0)}
-        >
-          {/* Desktop: grid, Mobile: flex-col */}
-          <div
-            className="hidden md:grid grid-cols-3 gap-2 aspect-[16/7] w-full overflow-hidden"
-            style={{ maxWidth: "100%" }}
-          >
-            {/* Main image left */}
-            <div className="col-span-2 row-span-2 relative h-full w-full">
-              <div className="w-full h-full overflow-hidden rounded-l-lg rounded-tr-lg md:rounded-tr-none md:rounded-bl-lg shadow">
-                <img
-                  src={mainImage}
-                  alt={`Main view of ${hotel.name}`}
-                  className="w-full h-full object-cover cursor-pointer"
-                  style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                  onClick={() => openSlider(0)}
-                />
+
+        {/* Hotel Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+                {hotel.name}
+              </h1>
+              <div className="flex items-center text-gray-600">
+                <FaMapMarkerAlt className="mr-2 text-indigo-500" />
+                <span>{hotel.place}</span>
               </div>
             </div>
-            {/* Up to 4 images on the right, fill full height */}
-            <div className="grid grid-rows-2 gap-2 col-span-1 h-full w-full">
+            {hotel.rating && (
+              <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex items-center mr-2">
+                  {Array.from({ length: 5 }).map((_, i) =>
+                    i < hotel.rating ? (
+                      <FaStar key={i} className="text-yellow-400" />
+                    ) : (
+                      <FaRegStar key={i} className="text-yellow-400" />
+                    )
+                  )}
+                </div>
+                <span className="text-gray-700 font-medium">
+                  {hotel.rating.toFixed(1)} / 5
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Image Gallery */}
+          <div className="relative group mb-8 rounded-xl overflow-hidden shadow-lg">
+            <div className="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-96">
+              {/* Main image */}
+              <div
+                className="col-span-2 row-span-2 relative cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => openSlider(0)}
+              >
+                <Image
+                  src={mainImage}
+                  alt={`Main view of ${hotel.name}`}
+                  fill
+                  className="object-cover"
+                  quality={80}
+                />
+              </div>
+
+              {/* Thumbnail images */}
               {collageImages.map((img, idx) => (
                 <div
                   key={idx}
-                  className={`relative h-full w-full overflow-hidden rounded${
-                    idx === 1 ? " rounded-tr-lg" : ""
-                  }${idx === 3 ? " rounded-br-lg" : ""}`}
-                  style={{ minHeight: 0 }}
+                  className={`relative cursor-pointer hover:opacity-90 transition-opacity ${
+                    idx === 0 ? "col-span-2" : ""
+                  }`}
+                  onClick={() => openSlider(idx + 1)}
                 >
-                  <img
+                  <Image
                     src={img}
                     alt={`Hotel view ${idx + 2}`}
-                    className="w-full h-full object-cover cursor-pointer shadow"
-                    style={{
-                      objectFit: "cover",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                    onClick={() => openSlider(idx + 1)}
+                    fill
+                    className="object-cover"
+                    quality={80}
                   />
-                  {/* Overlay for extra images or always on last image */}
-                  {idx === 3 && (
-                    <div
-                      className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 rounded-br-lg cursor-pointer hover:bg-opacity-60 transition"
-                      onClick={() => openSlider(0)}
-                    >
-                      <FaPlus className="text-white text-2xl mb-1" />
-                      <span className="text-white font-medium text-base">
-                        View More Photos
-                      </span>
-                      {extraCount > 0 && (
-                        <span className="text-white text-xs mt-1">
-                          +{extraCount} more
-                        </span>
-                      )}
+                  {idx === collageImages.length - 1 && extraCount > 0 && (
+                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center text-white font-medium">
+                      +{extraCount} more
                     </div>
                   )}
                 </div>
               ))}
             </div>
-          </div>
-          {/* Mobile: stack all images in a column, main image first, then rest */}
-          <div className="flex flex-col gap-2 md:hidden">
-            <div className="w-full aspect-[4/3] overflow-hidden rounded-lg shadow">
-              <img
+
+            {/* Mobile image gallery */}
+            <div className="md:hidden h-64 relative">
+              <Image
                 src={mainImage}
                 alt={`Main view of ${hotel.name}`}
-                className="w-full h-full object-cover cursor-pointer"
-                style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                onClick={() => openSlider(0)}
+                fill
+                className="object-cover"
+                quality={80}
               />
-            </div>
-            {collageImages.map((img, idx) => (
               <div
-                key={idx}
-                className={`w-full aspect-[4/3] overflow-hidden rounded-lg shadow relative`}
+                className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm"
+                onClick={() => openSlider(0)}
               >
-                <img
-                  src={img}
-                  alt={`Hotel view ${idx + 2}`}
-                  className="w-full h-full object-cover cursor-pointer"
-                  style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                  onClick={() => openSlider(idx + 1)}
-                />
-                {/* Overlay only on last image in mobile view */}
-                {idx === collageImages.length - 1 && (
-                  <div
-                    className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 rounded-lg cursor-pointer hover:bg-opacity-60 transition"
-                    onClick={() => openSlider(0)}
-                  >
-                    <FaPlus className="text-white text-2xl mb-1" />
-                    <span className="text-white font-medium text-base">
-                      View More Photos
-                    </span>
-                    {extraCount > 0 && (
-                      <span className="text-white text-xs mt-1">
-                        +{extraCount} more
-                      </span>
-                    )}
-                  </div>
-                )}
+                View all photos
               </div>
-            ))}
+            </div>
+
+            {/* Hover overlay */}
+            <div className="hidden md:flex absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-30 cursor-pointer">
+              <div className="bg-white bg-opacity-90 px-6 py-3 rounded-full text-indigo-700 font-medium flex items-center">
+                <FaPlus className="mr-2" />
+                View all photos
+              </div>
+            </div>
           </div>
-          {/* Overlay on hover */}
-          <div
-            className="hidden md:flex absolute inset-0 z-10 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
-            style={{ background: "rgba(0,0,0,0.4)" }}
-          >
-            <span className="text-white text-2xl font-semibold flex items-center gap-2">
-              <FaPlus className="inline-block mb-1" /> Click to view images
-            </span>
-          </div>
-        </div>
-        {/* Features/Tags */}
-        {hotel.tags && hotel.tags.length > 0 && (
-          <div className="flex flex-wrap gap-3 mb-6">
-            {hotel.tags.map((tag, idx) => (
-              <HotelTag tag={tag} key={idx} />
-            ))}
-          </div>
-        )}
-        {/* Description */}
-        {hotel.description && (
-          <p className="text-gray-700 text-lg mb-8 mt-4">{hotel.description}</p>
-        )}
-        {/* Room Cards Section */}
-        <div className="mb-10">
-          <h2 className="text-2xl font-semibold text-indigo-700 mb-4">Rooms</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {(hotel.room && hotel.room.length > 0
-              ? hotel.room
-              : dummyRooms
-            ).map((room, idx) => {
-              // Pick a random image for each room
-              const img =
-                roomImages[Math.floor(Math.random() * roomImages.length)];
-              // Use API data if available, else fallback to dummy
-              const roomName = room.name || room.type;
-              const guests = room.no_of_guests || 2; // fallback to 2 if not present
-              const price = room.price || 120; // fallback to dummy price
-              const status = room.status || "Available";
-              return (
-                <div
-                  key={room.id || idx}
-                  className="bg-white rounded-lg shadow p-6 flex flex-col justify-between"
-                >
-                  <img
-                    src={img}
-                    alt={roomName}
-                    className="w-full h-40 object-cover rounded-md mb-4"
-                  />
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">
-                      {roomName}
-                    </h3>
-                    <div className="flex items-center gap-2 mb-2">
-                      <FaUserFriends className="text-indigo-600 text-lg" />
-                      <span className="text-gray-600">
-                        {guests} guest{guests > 1 ? "s" : ""}
-                      </span>
+
+          {/* Hotel Features */}
+          {hotel.tags && hotel.tags.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                Facilities
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {hotel.tags.map((tag, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                  >
+                    {tagIcons[tag] || <FaPlus className="text-indigo-500" />}
+                    <span className="ml-2 text-gray-700 text-sm">{tag}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          {hotel.description && (
+            <div className="mb-10">
+              <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                About this property
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                {hotel.description}
+              </p>
+            </div>
+          )}
+
+          {/* Rooms Section */}
+          <div className="mb-12">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Available Rooms
+              </h2>
+            </div>
+
+            {hotel.room && hotel.room.length > 0 ? (
+              <div className="space-y-6">
+                {hotel.room.map((room, idx) => {
+                  const img =
+                    roomImages[Math.floor(Math.random() * roomImages.length)];
+                  const roomName = room.name || room.type;
+                  const guests = room.no_of_guests || 2;
+                  const price = room.price || 120;
+                  const status = room.status || "Available";
+
+                  return (
+                    <div
+                      key={room.id || idx}
+                      className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100"
+                    >
+                      <div className="md:flex">
+                        <div className="md:w-1/3 h-48 md:h-auto relative">
+                          <Image
+                            src={img}
+                            alt={roomName}
+                            fill
+                            className="object-cover"
+                            quality={80}
+                          />
+                        </div>
+                        <div className="p-6 md:w-2/3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                {roomName}
+                              </h3>
+                              <div className="flex items-center text-gray-600 mb-2">
+                                <FaUserFriends className="mr-2 text-indigo-500" />
+                                <span className="text-sm">
+                                  Sleeps {guests} guest{guests > 1 ? "s" : ""}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-2xl font-bold text-indigo-600">
+                                ${price}
+                              </div>
+                              <div className="text-gray-500 text-sm">
+                                per night
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <div className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                              <FaBed className="mr-1 text-indigo-500" />
+                              King bed
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                              <FaWifi className="mr-1 text-indigo-500" />
+                              Free WiFi
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                              <FaSnowflake className="mr-1 text-indigo-500" />
+                              Air conditioning
+                            </div>
+                          </div>
+
+                          <div className="mt-6 flex justify-end">
+                            <button
+                              onClick={() => openAvailabilityModal(room)}
+                              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                                status === "Available"
+                                  ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                  : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                              }`}
+                            >
+                              Check Availability
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    {/* <p className="text-gray-600 mb-2">
-                      {status === "Available" ? "Available" : "Occupied"}
-                    </p> */}
-                    <p className="text-indigo-700 font-semibold text-xl mb-4">
-                      ${price} / night
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+                <div className="text-gray-400 mb-4">
+                  <FaBed className="inline-block text-4xl" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-700 mb-2">
+                  No rooms available in this hotel
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Please check back later or browse other hotels.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mb-10">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Guest Reviews
+              </h2>
+              <button
+                className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center"
+                onClick={() => setReviewModalOpen(true)}
+              >
+                <FaPlus className="mr-2" />
+                Add Review
+              </button>
+            </div>
+
+            {hotel.reviews && hotel.reviews.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-6">
+                {hotel.reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+                  >
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold mr-4">
+                        {review.user.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800">
+                          {review.user.name}
+                        </h4>
+                        <div className="flex items-center text-sm text-gray-500">
+                          {new Date(
+                            review.createdAt || review.date
+                          ).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex mb-3">
+                      {Array.from({ length: 5 }).map((_, i) =>
+                        i < review.rating ? (
+                          <FaStar key={i} className="text-yellow-400" />
+                        ) : (
+                          <FaRegStar key={i} className="text-yellow-400" />
+                        )
+                      )}
+                    </div>
+                    <p className="text-gray-700">
+                      {review.description || review.comment}
                     </p>
                   </div>
-                  <button
-                    className={`mt-auto px-4 py-2 rounded font-medium text-white transition-colors ${
-                      status === "Available"
-                        ? "bg-indigo-600 hover:bg-indigo-700"
-                        : "bg-gray-400 cursor-not-allowed"
-                    }`}
-                    // disabled={status !== "Available"}
-                    onClick={() => openAvailabilityModal(room)}
-                  >
-                    Check Availability
-                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+                <div className="text-gray-400 mb-4">
+                  <FaStar className="inline-block text-4xl" />
                 </div>
-              );
-            })}
+                <h3 className="text-lg font-medium text-gray-700 mb-2">
+                  No reviews yet
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Be the first to share your experience!
+                </p>
+                <button
+                  onClick={() => setReviewModalOpen(true)}
+                  className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 inline-flex items-center"
+                >
+                  <FaPlus className="mr-2" />
+                  Write a Review
+                </button>
+              </div>
+            )}
           </div>
         </div>
-        {/* Reviews Section */}
-        <div className="mb-10">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-indigo-700">Reviews</h2>
-            <button
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-              onClick={() => setReviewModalOpen(true)}
-            >
-              Add Review
-            </button>
-          </div>
-          {hotel.reviews && hotel.reviews.length > 0 ? (
-            <div className="space-y-6">
-              {hotel.reviews.map((review) => (
-                <div key={review.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center mb-2">
-                    <span className="font-bold text-gray-800 mr-2">
-                      {review.user.name}
-                    </span>
-                    <span className="text-yellow-400 mr-2">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <span key={i}>★</span>
-                      ))}
-                      {Array.from({ length: 5 - review.rating }).map((_, i) => (
-                        <span key={i} className="text-gray-300">
-                          ★
-                        </span>
-                      ))}
-                    </span>
-                  </div>
-                  <p className="text-gray-700">{review.description}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 italic">No reviews yet.</p>
-          )}
-          {/* Review Modal */}
-          {reviewModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <form
-                className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative"
-                onSubmit={handlePostReview}
-              >
-                <button
-                  type="button"
-                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
-                  onClick={() => setReviewModalOpen(false)}
-                >
-                  &times;
-                </button>
-                <h3 className="text-xl font-bold mb-4">Add Your Review</h3>
-                <label className="block mb-2 font-medium">Your Rating</label>
-                <div className="flex items-center mb-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      className={`text-2xl cursor-pointer ${
-                        reviewRating >= star
-                          ? "text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                      onClick={() => setReviewRating(star)}
-                      data-testid={`star-${star}`}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <label className="block mb-2 font-medium">Your Review</label>
-                <textarea
-                  className="w-full border border-gray-300 rounded p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  rows={4}
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  required
-                  placeholder="Share your experience..."
-                />
-                {reviewError && (
-                  <div className="mb-2 text-red-600">{reviewError}</div>
-                )}
-                <button
-                  type="submit"
-                  className="w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-                  disabled={reviewLoading || !reviewText || !reviewRating}
-                >
-                  {reviewLoading ? "Posting..." : "Post Review"}
-                </button>
-              </form>
-            </div>
-          )}
-        </div>
-        {/* Availability Modal */}
-        {availabilityModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <form
-              className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative"
-              onSubmit={handleCheckAvailability}
-            >
+
+        {/* Review Modal */}
+        {reviewModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md relative">
               <button
                 type="button"
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
-                onClick={() => setAvailabilityModalOpen(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl rounded-full p-2"
+                onClick={() => setReviewModalOpen(false)}
               >
-                &times;
+                <FaTimes />
               </button>
-              <h3 className="text-xl font-bold mb-4">
-                Check Room Availability
-              </h3>
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Check-in Date</label>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded p-2"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  required
-                />
+
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  Write a Review
+                </h3>
+
+                <form onSubmit={handlePostReview}>
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-3">
+                      Your Rating
+                    </label>
+                    <div className="flex space-x-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          className={`text-3xl ${
+                            reviewRating >= star
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                          onClick={() => setReviewRating(star)}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-3">
+                      Your Review
+                    </label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-lg p-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      rows={5}
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      required
+                      placeholder="Share your experience with this hotel..."
+                    />
+                  </div>
+
+                  {reviewError && (
+                    <div className="mb-4 text-red-600 text-sm">
+                      {reviewError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+                    disabled={reviewLoading || !reviewText || !reviewRating}
+                  >
+                    {reviewLoading ? (
+                      <span className="inline-flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Submitting...
+                      </span>
+                    ) : (
+                      "Submit Review"
+                    )}
+                  </button>
+                </form>
               </div>
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Check-out Date</label>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded p-2"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">
-                  Number of Guests
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  className="w-full border border-gray-300 rounded p-2"
-                  value={numberOfGuests}
-                  onChange={(e) => setNumberOfGuests(Number(e.target.value))}
-                  required
-                />
-                <div className="text-sm text-gray-500 mt-1">
-                  {`This will book ${calculatedRoomCount} room${
-                    calculatedRoomCount > 1 ? "s" : ""
-                  } (max ${guestsPerRoom} guest${
-                    guestsPerRoom > 1 ? "s" : ""
-                  } per room)`}
-                </div>
-              </div>
-              {availabilityError && (
-                <div className="mb-2 text-red-600">{availabilityError}</div>
-              )}
-              {availabilityResult !== null && (
-                <div
-                  className={`mb-4 text-lg font-semibold ${
-                    availabilityResult ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {availabilityResult
-                    ? "Room is available!"
-                    : "Room is not available for the selected dates."}
-                </div>
-              )}
-              {availabilityResult && (
-                <button
-                  type="button"
-                  className="w-full py-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 transition mb-2"
-                  onClick={handleBookRoom}
-                  disabled={bookingLoading}
-                >
-                  {bookingLoading ? "Booking..." : "Book Now"}
-                </button>
-              )}
-              <button
-                type="submit"
-                className="w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-                disabled={
-                  availabilityLoading ||
-                  !checkIn ||
-                  !checkOut ||
-                  !numberOfGuests
-                }
-              >
-                {availabilityLoading ? "Checking..." : "Check Availability"}
-              </button>
-            </form>
+            </div>
           </div>
         )}
-        {/* Image Slider Modal */}
 
+        {/* Availability Modal */}
+        {availabilityModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md relative">
+              <button
+                type="button"
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl rounded-full p-2"
+                onClick={() => setAvailabilityModalOpen(false)}
+              >
+                <FaTimes />
+              </button>
+
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  Check Availability
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  for {selectedRoom?.name || selectedRoom?.type}
+                </p>
+
+                <form onSubmit={handleCheckAvailability}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Check-in
+                      </label>
+                      <div className="relative">
+                        <FaCalendarAlt className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                          type="date"
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          value={checkIn}
+                          onChange={(e) => setCheckIn(e.target.value)}
+                          required
+                          min={new Date().toISOString().split("T")[0]}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Check-out
+                      </label>
+                      <div className="relative">
+                        <FaCalendarAlt className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                          type="date"
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          value={checkOut}
+                          onChange={(e) => setCheckOut(e.target.value)}
+                          required
+                          min={
+                            checkIn || new Date().toISOString().split("T")[0]
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Guests
+                    </label>
+                    <div className="relative">
+                      <FaUsers className="absolute left-3 top-3 text-gray-400" />
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        value={numberOfGuests}
+                        onChange={(e) =>
+                          setNumberOfGuests(Number(e.target.value))
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="text-sm text-gray-500 mt-2">
+                      {`${calculatedRoomCount} room${
+                        calculatedRoomCount > 1 ? "s" : ""
+                      } needed (max ${guestsPerRoom} per room)`}
+                    </div>
+                  </div>
+
+                  {availabilityError && (
+                    <div className="mb-4 text-red-600 text-sm">
+                      {availabilityError}
+                    </div>
+                  )}
+
+                  {availabilityResult !== null && (
+                    <div
+                      className={`mb-6 p-4 rounded-lg ${
+                        availabilityResult
+                          ? "bg-green-50 text-green-700"
+                          : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {availabilityResult ? (
+                        <div>
+                          <div className="font-bold mb-2">Room available!</div>
+                          <div>
+                            Total for {calculatedRoomCount} room
+                            {calculatedRoomCount > 1 ? "s" : ""}:{" "}
+                            <span className="font-bold">
+                              $
+                              {(selectedRoom?.price || 0) *
+                                calculatedRoomCount *
+                                Math.ceil(
+                                  (new Date(checkOut) - new Date(checkIn)) /
+                                    (1000 * 60 * 60 * 24)
+                                )}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        "Room not available for the selected dates."
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {availabilityResult && (
+                      <button
+                        type="button"
+                        onClick={handleBookRoom}
+                        disabled={bookingLoading}
+                        className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+                      >
+                        {bookingLoading ? (
+                          <span className="inline-flex items-center">
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Booking...
+                          </span>
+                        ) : (
+                          "Book Now"
+                        )}
+                      </button>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={
+                        availabilityLoading ||
+                        !checkIn ||
+                        !checkOut ||
+                        !numberOfGuests
+                      }
+                      className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+                    >
+                      {availabilityLoading ? (
+                        <span className="inline-flex items-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Checking...
+                        </span>
+                      ) : (
+                        "Check Availability"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Slider Modal */}
         {sliderOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
             onClick={closeSlider}
           >
             <button
-              className="absolute top-6 right-8 text-white text-3xl p-2 bg-black bg-opacity-40 rounded-full hover:bg-opacity-70 focus:outline-none"
+              className="absolute top-8 right-8 text-white text-3xl p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 focus:outline-none"
               onClick={(e) => {
                 e.stopPropagation();
                 closeSlider();
@@ -685,8 +913,9 @@ export default function HotelDetailsPage() {
             >
               <FaTimes />
             </button>
+
             <button
-              className="absolute left-8 top-1/2 -translate-y-1/2 text-white text-4xl p-2 bg-black bg-opacity-40 rounded-full hover:bg-opacity-70 focus:outline-none"
+              className="absolute left-8 top-1/2 -translate-y-1/2 text-white text-4xl p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 focus:outline-none"
               onClick={(e) => {
                 e.stopPropagation();
                 prevImage();
@@ -695,14 +924,23 @@ export default function HotelDetailsPage() {
             >
               <FaChevronLeft />
             </button>
-            <img
-              src={images[sliderIndex]}
-              alt={`Hotel image ${sliderIndex + 1}`}
-              className="max-h-[80vh] max-w-[90vw] rounded-lg shadow-lg border-4 border-white object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+
+            <div className="relative max-h-[90vh] max-w-[90vw]">
+              <Image
+                src={images[sliderIndex]}
+                alt={`Hotel image ${sliderIndex + 1}`}
+                width={1200}
+                height={800}
+                className="rounded-lg object-contain max-h-[90vh] max-w-[90vw]"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="absolute bottom-4 left-0 right-0 text-center text-white text-sm">
+                {sliderIndex + 1} / {images.length}
+              </div>
+            </div>
+
             <button
-              className="absolute right-8 top-1/2 -translate-y-1/2 text-white text-4xl p-2 bg-black bg-opacity-40 rounded-full hover:bg-opacity-70 focus:outline-none"
+              className="absolute right-8 top-1/2 -translate-y-1/2 text-white text-4xl p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 focus:outline-none"
               onClick={(e) => {
                 e.stopPropagation();
                 nextImage();
