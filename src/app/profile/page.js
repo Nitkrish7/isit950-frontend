@@ -357,6 +357,16 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Reset Password Link */}
+                <div className="mt-6">
+                  <Link
+                    href="/reset-password"
+                    className="inline-block px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
+                  >
+                    Reset Password
+                  </Link>
+                </div>
               </div>
             )}
           </div>

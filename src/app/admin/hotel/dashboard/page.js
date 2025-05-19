@@ -5,8 +5,11 @@ import { useHotelAdmin } from "@/context/HotelAdminContext";
 import { adminAPI } from "@/lib/api";
 import HotelAdminNavbar from "@/components/HotelAdminNavbar";
 import ReportGenerator from "@/components/ReportGenerator";
+import withRole from "@/components/withRole";
 
-export default function HotelAdminDashboard() {
+export default withRole(HotelAdminDashboard, ["admin"]);
+
+function HotelAdminDashboard() {
   const { hotelId, loading: contextLoading } = useHotelAdmin();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);

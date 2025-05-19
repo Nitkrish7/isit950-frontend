@@ -4,8 +4,11 @@ import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { adminAPI } from "@/lib/api";
 import ReportGenerator from "@/components/ReportGenerator";
+import withRole from "@/components/withRole";
 
-export default function AdminDashboard() {
+export default withRole(AdminDashboard, ["superuser"]);
+
+function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(false);

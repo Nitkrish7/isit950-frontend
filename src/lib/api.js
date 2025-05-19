@@ -41,6 +41,8 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (email, password) => api.post("/auth/login", { email, password }),
   signup: (userData) => api.post("/auth/signup", userData),
+  resetPassword: ({ email, oldPassword, newPassword }) =>
+    api.put("/auth/password/reset", { email, oldPassword, newPassword }),
 };
 
 // User API methods
