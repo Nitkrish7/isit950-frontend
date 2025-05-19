@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useHotelAdmin } from "@/context/HotelAdminContext";
 import { adminAPI } from "@/lib/api";
 import HotelAdminNavbar from "@/components/HotelAdminNavbar";
+import ReportGenerator from "@/components/ReportGenerator";
 
 export default function HotelAdminDashboard() {
   const { hotelId, loading: contextLoading } = useHotelAdmin();
@@ -13,6 +14,7 @@ export default function HotelAdminDashboard() {
   const [upcoming, setUpcoming] = useState([]);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
   const [upcomingError, setUpcomingError] = useState("");
+  const [hotelName, setHotelName] = useState("");
 
   useEffect(() => {
     if (!hotelId) return;
@@ -22,6 +24,9 @@ export default function HotelAdminDashboard() {
       try {
         const res = await adminAPI.getHotelAdminStats(hotelId);
         setStats(res);
+        // Fetch hotel name
+        const hotelDetails = await adminAPI.getHotelDetails(hotelId);
+        setHotelName(hotelDetails.name);
       } catch (err) {
         setError("Failed to load dashboard stats");
       } finally {
@@ -48,9 +53,12 @@ export default function HotelAdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 mb-6 sm:mb-8">
-        Hotel Dashboard
-      </h1>
+      <div className="flex justify-between items-center mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-800">
+          Hotel Dashboard
+        </h1>
+        <ReportGenerator type="hotel" hotelId={hotelId} hotelName={hotelName} />
+      </div>
       {error && (
         <div className="mb-4 p-2 bg-red-100 text-red-700 rounded max-w-xl w-full">
           {error}

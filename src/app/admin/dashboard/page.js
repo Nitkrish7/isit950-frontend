@@ -3,31 +3,26 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { adminAPI } from "@/lib/api";
+import ReportGenerator from "@/components/ReportGenerator";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [stats, setStats] = useState({
-    totalUsers: 1254,
-    totalHotels: 87,
-    totalBookings: 342,
-    occupancyRate: 0.769,
-    totalRevenue: 125430,
-    totalGuestsServed: 2543,
-  });
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
+      setError("");
       try {
         const token = localStorage.getItem("authToken");
         if (!token) {
           router.push("/login");
           return;
         }
-        // Simulated API call - replace with actual API call
-        // const res = await adminAPI.getSuperuserStats();
-        // setStats(res);
+        const res = await adminAPI.getSuperuserStats();
+        setStats(res);
       } catch (error) {
         setError("Failed to load dashboard data");
       } finally {
@@ -84,56 +79,63 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-            Dashboard Overview
-          </h1>
-          <p className="text-gray-600 mt-2">Key metrics and recent activity</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                Dashboard Overview
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Key metrics and recent activity
+              </p>
+            </div>
+            <ReportGenerator type="superuser" />
+          </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          <StatCard
-            title="Total Users"
-            value={stats.totalUsers.toLocaleString()}
-            icon="users"
-            trend="up"
-            change="+12% from last month"
-          />
-          <StatCard
-            title="Total Hotels"
-            value={stats.totalHotels.toLocaleString()}
-            icon="hotel"
-            trend="steady"
-            change="No change from last month"
-          />
-          <StatCard
-            title="Total Bookings"
-            value={stats.totalBookings.toLocaleString()}
-            icon="bed"
-            trend="up"
-            change="+24% from last month"
-          />
-          <StatCard
-            title="Occupancy Rate"
-            value={`${(stats.occupancyRate * 100).toFixed(1)}%`}
-            icon="chart"
-            trend="up"
-            change="+5% from last month"
-          />
-          <StatCard
-            title="Total Revenue"
-            value={`$${stats.totalRevenue.toLocaleString()}`}
-            icon="dollar"
-            trend="up"
-            change="+18% from last month"
-          />
-          <StatCard
-            title="Guests Served"
-            value={stats.totalGuestsServed.toLocaleString()}
-            icon="users"
-            trend="up"
-            change="+15% from last month"
-          />
+          {stats.totalUsers !== undefined && (
+            <StatCard
+              title="Total Users"
+              value={stats.totalUsers}
+              icon="users"
+            />
+          )}
+          {stats.totalHotels !== undefined && (
+            <StatCard
+              title="Total Hotels"
+              value={stats.totalHotels}
+              icon="hotel"
+            />
+          )}
+          {stats.totalBookings !== undefined && (
+            <StatCard
+              title="Total Bookings"
+              value={stats.totalBookings}
+              icon="bed"
+            />
+          )}
+          {stats.occupancyRate !== undefined && (
+            <StatCard
+              title="Occupancy Rate"
+              value={`${(stats.occupancyRate * 100).toFixed(1)}%`}
+              icon="chart"
+            />
+          )}
+          {stats.totalRevenue !== undefined && (
+            <StatCard
+              title="Total Revenue"
+              value={`$${Number(stats.totalRevenue).toLocaleString()}`}
+              icon="dollar"
+            />
+          )}
+          {stats.totalGuestsServed !== undefined && (
+            <StatCard
+              title="Guests Served"
+              value={stats.totalGuestsServed}
+              icon="users"
+            />
+          )}
         </div>
 
         {/* Recent Activity Section */}
@@ -173,7 +175,7 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ title, value, icon, trend, change }) {
+function StatCard({ title, value, icon }) {
   const iconClasses = {
     users:
       "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
@@ -185,18 +187,6 @@ function StatCard({ title, value, icon, trend, change }) {
       "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   };
 
-  const trendColors = {
-    up: "text-green-500",
-    down: "text-red-500",
-    steady: "text-yellow-500",
-  };
-
-  const trendIcons = {
-    up: "M5 15l7-7 7 7",
-    down: "M19 9l-7 7-7-7",
-    steady: "M5 12h14",
-  };
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between">
@@ -205,28 +195,8 @@ function StatCard({ title, value, icon, trend, change }) {
             {title}
           </p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-          {change && (
-            <p
-              className={`text-xs mt-2 flex items-center ${trendColors[trend]}`}
-            >
-              <svg
-                className="w-3 h-3 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={trendIcons[trend]}
-                />
-              </svg>
-              {change}
-            </p>
-          )}
         </div>
-        <div className={`p-3 rounded-lg ${trendColors[trend]} bg-opacity-10`}>
+        <div className="p-3 rounded-lg bg-opacity-10">
           <svg
             className="w-6 h-6"
             fill="none"

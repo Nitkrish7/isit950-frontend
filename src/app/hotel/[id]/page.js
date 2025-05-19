@@ -187,32 +187,79 @@ export default function HotelDetailsPage() {
     }
   };
 
-  // Book room handler
+  // Payment modal state
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCVV, setCardCVV] = useState("");
+
+  // Open payment modal instead of booking directly
   const handleBookRoom = async () => {
-    setBookingLoading(true);
-    setToast({ message: "", type: "" });
-    try {
-      const res = await userAPI.createBooking({
-        roomid: selectedRoom.id || selectedRoom._id,
-        startdate: checkIn,
-        enddate: checkOut,
-        bookinguserid: user?.id,
-        hotelid: id,
-        booking_count: calculatedRoomCount,
-        no_of_guests: numberOfGuests,
-      });
-      setToast({ message: "Booking successful!", type: "success" });
-      setAvailabilityModalOpen(false);
-      setTimeout(() => setToast({ message: "", type: "" }), 3000);
-    } catch (err) {
-      setToast({
-        message: err.message || "Failed to book room",
-        type: "error",
-      });
-      setTimeout(() => setToast({ message: "", type: "" }), 3000);
-    } finally {
-      setBookingLoading(false);
-    }
+    setPaymentModalOpen(true);
+    setPaymentSuccess(false);
+    setPaymentError("");
+    setCardNumber("");
+    setCardName("");
+    setCardExpiry("");
+    setCardCVV("");
+  };
+
+  // Handle payment form submit
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    setPaymentLoading(true);
+    setPaymentError("");
+    setPaymentSuccess(false);
+    // Simulate payment processing delay
+    setTimeout(async () => {
+      // Simple dummy validation
+      if (
+        cardNumber.length !== 16 ||
+        !/^[0-9]{16}$/.test(cardNumber) ||
+        cardName.trim() === "" ||
+        !/^\d{2}\/\d{2}$/.test(cardExpiry) ||
+        cardCVV.length !== 3 ||
+        !/^[0-9]{3}$/.test(cardCVV)
+      ) {
+        setPaymentError("Please enter valid card details.");
+        setPaymentLoading(false);
+        return;
+      }
+      setPaymentSuccess(true);
+      setPaymentLoading(false);
+      // Wait a moment, then proceed to book
+      setTimeout(async () => {
+        setPaymentModalOpen(false);
+        setBookingLoading(true);
+        setToast({ message: "", type: "" });
+        try {
+          await userAPI.createBooking({
+            roomid: selectedRoom.id || selectedRoom._id,
+            startdate: checkIn,
+            enddate: checkOut,
+            bookinguserid: user?.id,
+            hotelid: id,
+            booking_count: calculatedRoomCount,
+            no_of_guests: numberOfGuests,
+          });
+          setToast({ message: "Booking successful!", type: "success" });
+          setAvailabilityModalOpen(false);
+          setTimeout(() => setToast({ message: "", type: "" }), 3000);
+        } catch (err) {
+          setToast({
+            message: err.message || "Failed to book room",
+            type: "error",
+          });
+          setTimeout(() => setToast({ message: "", type: "" }), 3000);
+        } finally {
+          setBookingLoading(false);
+        }
+      }, 1200);
+    }, 1200);
   };
 
   if (loading)
@@ -892,6 +939,156 @@ export default function HotelDetailsPage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Modal */}
+        {paymentModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md relative">
+              <button
+                type="button"
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl rounded-full p-2"
+                onClick={() => setPaymentModalOpen(false)}
+                disabled={paymentLoading}
+              >
+                <FaTimes />
+              </button>
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  Payment Details
+                </h3>
+                {paymentSuccess ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <svg
+                      className="w-16 h-16 text-green-500 mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <h4 className="text-xl font-semibold text-green-700 mb-2">
+                      Payment Successful!
+                    </h4>
+                    <p className="text-gray-600">Processing your booking...</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handlePaymentSubmit} className="space-y-5">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Card Number
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={16}
+                        inputMode="numeric"
+                        pattern="[0-9]{16}"
+                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="1234 5678 9012 3456"
+                        value={cardNumber}
+                        onChange={(e) =>
+                          setCardNumber(e.target.value.replace(/\D/g, ""))
+                        }
+                        required
+                        disabled={paymentLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Name on Card
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="John Doe"
+                        value={cardName}
+                        onChange={(e) => setCardName(e.target.value)}
+                        required
+                        disabled={paymentLoading}
+                      />
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Expiry (MM/YY)
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={5}
+                          pattern="\d{2}/\d{2}"
+                          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="08/27"
+                          value={cardExpiry}
+                          onChange={(e) => setCardExpiry(e.target.value)}
+                          required
+                          disabled={paymentLoading}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          CVV
+                        </label>
+                        <input
+                          type="password"
+                          maxLength={3}
+                          pattern="[0-9]{3}"
+                          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="123"
+                          value={cardCVV}
+                          onChange={(e) =>
+                            setCardCVV(e.target.value.replace(/\D/g, ""))
+                          }
+                          required
+                          disabled={paymentLoading}
+                        />
+                      </div>
+                    </div>
+                    {paymentError && (
+                      <div className="text-red-600 text-sm">{paymentError}</div>
+                    )}
+                    <button
+                      type="submit"
+                      className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+                      disabled={paymentLoading}
+                    >
+                      {paymentLoading ? (
+                        <span className="inline-flex items-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Processing Payment...
+                        </span>
+                      ) : (
+                        "Pay Now"
+                      )}
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
           </div>
