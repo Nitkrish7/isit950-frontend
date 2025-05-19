@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import HotelAdminNavbar from "@/components/HotelAdminNavbar";
 import { HotelAdminProvider } from "@/context/HotelAdminContext";
 

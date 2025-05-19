@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { adminAPI } from "@/lib/api";
 
 export default function HotelAdminOnboardingPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     place: "",
@@ -11,6 +13,7 @@ export default function HotelAdminOnboardingPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,10 +23,14 @@ export default function HotelAdminOnboardingPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
+
     if (!form.name || !form.place || !form.adminemail) {
       setError("Please fill in all required fields.");
+      setIsLoading(false);
       return;
     }
+
     try {
       const res = await adminAPI.requestOnboard({
         hotelname: form.name,
@@ -31,13 +38,20 @@ export default function HotelAdminOnboardingPage() {
         hoteladminemail: form.adminemail,
         hoteldescription: form.message || null,
       });
+
       if (res && (res.id || res.hotelname)) {
         setSubmitted(true);
+        // Redirect to home page after 2 seconds
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
       } else {
         setError("Failed to submit onboarding request. Please try again.");
       }
     } catch (err) {
       setError("Failed to submit onboarding request. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,7 +64,7 @@ export default function HotelAdminOnboardingPage() {
         {submitted ? (
           <div className="text-green-600 font-medium mb-4">
             Your onboarding request has been submitted! We will contact you
-            soon.
+            soon. Redirecting to home page...
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -109,9 +123,36 @@ export default function HotelAdminOnboardingPage() {
             {error && <div className="text-red-600 text-sm">{error}</div>}
             <button
               type="submit"
-              className="w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+              className="w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition flex justify-center items-center"
+              disabled={isLoading}
             >
-              Request Onboarding
+              {isLoading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                "Request Onboarding"
+              )}
             </button>
           </form>
         )}

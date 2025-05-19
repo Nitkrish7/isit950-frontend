@@ -39,9 +39,6 @@ export default function HotelBookingsPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Booking Name
-              </th>
-              <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                 Room Name
               </th>
               <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
@@ -71,9 +68,6 @@ export default function HotelBookingsPage() {
             ) : (
               bookings.map((booking) => (
                 <tr key={booking.id}>
-                  <td className="px-4 sm:px-6 py-4">
-                    {booking.user?.name || "-"}
-                  </td>
                   <td className="px-4 sm:px-6 py-4">
                     {booking.room?.name || "-"}
                   </td>

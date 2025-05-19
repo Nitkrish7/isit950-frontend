@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useHotelAdmin } from "@/context/HotelAdminContext";
+import { useState, useRef, useEffect } from "react";
+import { FiUser, FiLogOut, FiChevronDown } from "react-icons/fi";
 
 const navItems = [
   { label: "Dashboard", href: "/admin/hotel/dashboard", icon: "dashboard" },
@@ -15,6 +18,43 @@ const navItems = [
 
 export default function HotelAdminNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { adminId, hotelId, loading: contextLoading } = useHotelAdmin();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const timeoutId = useRef();
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    clearTimeout(timeoutId.current);
+    setDropdownOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutId.current = setTimeout(() => setDropdownOpen(false), 200);
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    router.push("/login");
+  };
 
   const getIcon = (iconName) => {
     switch (iconName) {
@@ -84,8 +124,54 @@ export default function HotelAdminNavbar() {
           </Link>
         ))}
       </nav>
-      <div className="p-4 border-t border-blue-700 text-sm text-blue-200">
-        <p>© {new Date().getFullYear()} Staytion</p>
+
+      {/* Profile Section */}
+      <div className="p-4 border-t border-blue-700">
+        <div
+          className="relative"
+          ref={dropdownRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <button
+            onClick={toggleDropdown}
+            className="w-full flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg p-2 hover:bg-blue-700 hover:bg-opacity-50"
+          >
+            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+              <FiUser className="w-4 h-4" />
+            </div>
+            <span className="text-white font-medium text-sm flex-1 text-left">
+              Hotel Admin
+            </span>
+            <FiChevronDown
+              className={`w-4 h-4 text-blue-200 transition-transform ${
+                dropdownOpen ? "transform rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute bottom-full left-0 mb-2 w-full bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
+              <Link
+                href="/admin/hotel/profile"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2"
+              >
+                <FiUser className="w-4 h-4" />
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2"
+              >
+                <FiLogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+        <p className="text-blue-200 text-sm mt-4">
+          © {new Date().getFullYear()} Staytion
+        </p>
       </div>
     </div>
   );

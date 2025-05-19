@@ -121,7 +121,7 @@ function AdminDashboard() {
           {stats.occupancyRate !== undefined && (
             <StatCard
               title="Occupancy Rate"
-              value={`${(stats.occupancyRate * 100).toFixed(1)}%`}
+              value={`${(stats.occupancyRate).toFixed(1)}%`}
               icon="chart"
             />
           )}

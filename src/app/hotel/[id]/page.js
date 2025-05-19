@@ -415,16 +415,19 @@ export default function HotelDetailsPage() {
                 className="object-cover"
                 quality={80}
               />
-              <div
-                className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm"
+              <button
+                className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm hover:bg-opacity-70 transition"
                 onClick={() => openSlider(0)}
               >
                 View all photos
-              </div>
+              </button>
             </div>
 
             {/* Hover overlay */}
-            <div className="hidden md:flex absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-30 cursor-pointer">
+            <div
+              className="hidden md:flex absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-30 cursor-pointer"
+              onClick={() => openSlider(0)}
+            >
               <div className="bg-white bg-opacity-90 px-6 py-3 rounded-full text-indigo-700 font-medium flex items-center">
                 <FaPlus className="mr-2" />
                 View all photos
