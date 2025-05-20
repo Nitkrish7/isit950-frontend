@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import { adminAPI } from "@/lib/api";
+import Papa from "papaparse";
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -153,6 +154,52 @@ export default function ReportGenerator({ type, hotelId, hotelName }) {
     }
   };
 
+  const downloadCSV = () => {
+    if (!stats) return;
+
+    let csvData = [];
+    if (type === "superuser") {
+      csvData = [
+        ["Staytion - Superuser Report"],
+        ["System Overview"],
+        ["Metric", "Value"],
+        ["Total Users", stats.totalUsers],
+        ["Total Hotels", stats.totalHotels],
+        ["Total Bookings", stats.totalBookings],
+        ["Occupancy Rate", `${(stats.occupancyRate * 100).toFixed(1)}%`],
+        ["Total Revenue", `$${stats.totalRevenue.toLocaleString()}`],
+        ["Total Guests Served", stats.totalGuestsServed],
+        ["Generated on", new Date().toLocaleDateString()],
+      ];
+    } else {
+      csvData = [
+        ["Staytion - Hotel Report"],
+        [hotelName],
+        ["Metric", "Value"],
+        ["Total Rooms", stats.totalRooms],
+        ["Occupied Rooms", stats.occupiedRooms],
+        ["Total Bookings", stats.totalBookings],
+        ["Generated on", new Date().toLocaleDateString()],
+      ];
+    }
+
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `${type === "superuser" ? "superuser" : "hotel"}-report-${
+        new Date().toISOString().split("T")[0]
+      }.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="flex flex-col items-center gap-4">
       <button
@@ -166,21 +213,30 @@ export default function ReportGenerator({ type, hotelId, hotelName }) {
       {error && <div className="text-red-500 text-sm">{error}</div>}
 
       {stats && (
-        <PDFDownloadLink
-          document={
-            type === "superuser" ? (
-              <SuperuserReport stats={stats} />
-            ) : (
-              <HotelAdminReport stats={stats} hotelName={hotelName} />
-            )
-          }
-          fileName={`${type === "superuser" ? "superuser" : "hotel"}-report-${
-            new Date().toISOString().split("T")[0]
-          }.pdf`}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          {({ loading }) => (loading ? "Preparing PDF..." : "Download PDF")}
-        </PDFDownloadLink>
+        <div className="flex gap-4">
+          <PDFDownloadLink
+            document={
+              type === "superuser" ? (
+                <SuperuserReport stats={stats} />
+              ) : (
+                <HotelAdminReport stats={stats} hotelName={hotelName} />
+              )
+            }
+            fileName={`${type === "superuser" ? "superuser" : "hotel"}-report-${
+              new Date().toISOString().split("T")[0]
+            }.pdf`}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            {({ loading }) => (loading ? "Preparing PDF..." : "Download PDF")}
+          </PDFDownloadLink>
+
+          <button
+            onClick={downloadCSV}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Download CSV
+          </button>
+        </div>
       )}
     </div>
   );
