@@ -17,6 +17,7 @@ import {
 import { FaUserShield } from "react-icons/fa";
 import { format } from "date-fns";
 import Link from "next/link";
+import { useMembership } from "@/context/MembershipContext";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const { membership } = useMembership();
 
   useEffect(() => {
     const loadData = async () => {
@@ -104,9 +106,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <UserNavbar />
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <Link
           href="/home"
@@ -115,65 +115,13 @@ export default function ProfilePage() {
           <FiArrowLeft className="mr-2" />
           Back to Home
         </Link>
-
-        {/* Profile Card */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-          {/* Profile Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-8 sm:px-8 sm:py-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-white">My Profile</h1>
-                <p className="mt-1 text-blue-100">
-                  Manage your personal information and settings
-                </p>
-              </div>
-              <button
-                onClick={handleEditToggle}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isEditing
-                    ? "bg-red-100 text-red-700 hover:bg-red-200"
-                    : "bg-white text-indigo-700 hover:bg-indigo-50"
-                }`}
-                disabled={!user}
-              >
-                {isEditing ? (
-                  <>
-                    <FiX className="w-4 h-4" />
-                    Cancel
-                  </>
-                ) : (
-                  <>
-                    <FiEdit2 className="w-4 h-4" />
-                    Edit Profile
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Profile Content */}
-          <div className="p-6 sm:p-8">
-            {/* Messages */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded">
-                <div className="flex items-center">
-                  <FiAlertCircle className="h-5 w-5 text-red-500 mr-3" />
-                  <span className="text-red-700">{error}</span>
-                </div>
-              </div>
-            )}
-
-            {success && (
-              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
-                <div className="flex items-center">
-                  <FiCheck className="h-5 w-5 text-green-500 mr-3" />
-                  <span className="text-green-700">{success}</span>
-                </div>
-              </div>
-            )}
-
-            {isEditing ? (
-              <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                Profile Information
+              </h3>
+              <div className="mt-6 space-y-6">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   {/* Name Field */}
                   <div className="space-y-2">
@@ -256,107 +204,56 @@ export default function ProfilePage() {
                       required
                     />
                   </div>
-                </div>
 
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`flex items-center gap-2 px-6 py-2 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                      isLoading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <FiCheck className="w-4 h-4" />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  {/* Name Field */}
+                  {/* Membership Field */}
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                      <FiUser className="text-gray-400" />
-                      Full Name
+                      <svg
+                        className="h-5 w-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Membership Tier
                     </div>
-                    <div className="text-gray-900 font-medium">
-                      {user?.name || "N/A"}
-                    </div>
-                  </div>
-
-                  {/* Email Field */}
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                      <FiMail className="text-gray-400" />
-                      Email
-                    </div>
-                    <div className="text-gray-900 font-medium">
-                      {user?.email || "N/A"}
-                    </div>
-                  </div>
-
-                  {/* Phone Field */}
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                      <FiPhone className="text-gray-400" />
-                      Phone Number
-                    </div>
-                    <div className="text-gray-900 font-medium">
-                      {user?.phonenumber || "N/A"}
-                    </div>
-                  </div>
-
-                  {/* Date of Birth Field */}
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                      <FiCalendar className="text-gray-400" />
-                      Date of Birth
-                    </div>
-                    <div className="text-gray-900 font-medium">
-                      {formatDate(user?.dateofbirth)}
-                    </div>
-                  </div>
-
-                  {/* Role Field */}
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                      <FaUserShield className="text-gray-400" />
-                      Role
-                    </div>
-                    <div className="text-gray-900 font-medium capitalize">
-                      {user?.role || "N/A"}
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 text-sm rounded-full ${
+                          membership.tier === "gold"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {membership.tier === "gold" ? "Gold" : "Free"}
+                      </span>
+                      {membership.tier === "gold" && membership.expiryDate && (
+                        <span className="text-sm text-gray-500">
+                          Expires:{" "}
+                          {new Date(membership.expiryDate).toLocaleDateString()}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
+
+                {/* Membership Upgrade Button */}
+                {membership.tier === "free" && (
+                  <div className="mt-6">
+                    <Link
+                      href="/subscription"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                    >
+                      Upgrade to Gold Membership
+                    </Link>
+                  </div>
+                )}
 
                 {/* Reset Password Link */}
                 <div className="mt-6">
@@ -368,7 +265,7 @@ export default function ProfilePage() {
                   </Link>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

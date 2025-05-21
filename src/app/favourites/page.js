@@ -40,12 +40,12 @@ export default function FavouritesPage() {
     fetchFavourites();
   }, [user]);
 
-  const handleRemoveFavourite = async (hotelId, e) => {
+  const handleRemoveFavourite = async (favId, e) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await userAPI.removeFavourite(user.id, hotelId);
-      setFavourites(favourites.filter((hotel) => hotel.id !== hotelId));
+      await userAPI.removeFavourite(favId);
+      setFavourites(favourites.filter((hotel) => hotel.id !== favId));
     } catch (err) {
       setError("Failed to remove favourite");
     }

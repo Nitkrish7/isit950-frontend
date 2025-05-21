@@ -32,6 +32,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
+import { useMembership } from "@/context/MembershipContext";
 
 // Tag to icon mapping
 const tagIcons = {
@@ -260,6 +261,27 @@ export default function HotelDetailsPage() {
         }
       }, 1200);
     }, 1200);
+  };
+
+  const { membership, calculateDiscountedPrice } = useMembership();
+
+  const renderPrice = (price) => {
+    const discountedPrice = calculateDiscountedPrice(price);
+    return (
+      <div className="flex items-center gap-2">
+        {membership.tier === "gold" ? (
+          <>
+            <span className="text-gray-500 line-through">${price}</span>
+            <span className="text-green-600 font-bold">
+              ${discountedPrice.toFixed(2)}
+            </span>
+            <span className="text-xs text-green-600">(Gold Member Price)</span>
+          </>
+        ) : (
+          <span className="font-bold">${price}</span>
+        )}
+      </div>
+    );
   };
 
   if (loading)
@@ -515,7 +537,7 @@ export default function HotelDetailsPage() {
                             </div>
                             <div className="text-right">
                               <div className="text-2xl font-bold text-indigo-600">
-                                ${price}
+                                {renderPrice(price)}
                               </div>
                               <div className="text-gray-500 text-sm">
                                 per night
@@ -603,7 +625,7 @@ export default function HotelDetailsPage() {
                         </h4>
                         <div className="flex items-center text-sm text-gray-500">
                           {new Date(
-                            review.createdAt || review.date
+                            review.createdAt || review.time
                           ).toLocaleDateString()}
                         </div>
                       </div>
@@ -848,13 +870,14 @@ export default function HotelDetailsPage() {
                             Total for {calculatedRoomCount} room
                             {calculatedRoomCount > 1 ? "s" : ""}:{" "}
                             <span className="font-bold">
-                              $
-                              {(selectedRoom?.price || 0) *
-                                calculatedRoomCount *
-                                Math.ceil(
-                                  (new Date(checkOut) - new Date(checkIn)) /
-                                    (1000 * 60 * 60 * 24)
-                                )}
+                              {renderPrice(
+                                (selectedRoom?.price || 0) *
+                                  calculatedRoomCount *
+                                  Math.ceil(
+                                    (new Date(checkOut) - new Date(checkIn)) /
+                                      (1000 * 60 * 60 * 24)
+                                  )
+                              )}
                             </span>
                           </div>
                         </div>

@@ -60,6 +60,8 @@ export const userAPI = {
   forgotPassword: (email) => api.put("/auth/password/forgot", { email }),
   addToFavourites: (userId, hotelId) =>
     api.post("/user/addtofavourites", { userId, hotelId }),
+  removeFavourite: (favId) =>
+    api.delete("/user/removefromfavourites", { data: { favId } }),
 };
 
 // Admin API methods

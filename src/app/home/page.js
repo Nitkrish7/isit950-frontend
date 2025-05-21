@@ -13,8 +13,10 @@ import {
   FaHeart,
 } from "react-icons/fa";
 import { FiAlertCircle } from "react-icons/fi";
+import { useMembership } from "@/context/MembershipContext";
 
 const mainImages = ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg"];
+const GOLD_COLOR_CLASS = "text-yellow-400";
 
 export default function UserHomePage() {
   const { user } = useAuth();
@@ -27,6 +29,7 @@ export default function UserHomePage() {
   const [searchError, setSearchError] = useState("");
   const [toast, setToast] = useState({ message: "", type: "" });
   const [favourites, setFavourites] = useState([]);
+  const { membership } = useMembership();
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -118,7 +121,20 @@ export default function UserHomePage() {
       <div className="bg-gradient-to-r from-indigo-600 to-blue-600 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl font-bold text-white mb-4">
-            Welcome{user && user.name ? `, ${user.name}` : "!"}
+            Welcome,
+            {user && user.name ? (
+              <span
+                className={
+                  membership.tier === "gold"
+                    ? `ml-1 ${GOLD_COLOR_CLASS}`
+                    : "ml-1"
+                }
+              >
+                {` ${user.name}`}
+              </span>
+            ) : (
+              "!"
+            )}
           </h1>
           <p className="text-xl text-indigo-100 max-w-3xl mx-auto">
             Discover your perfect stay at the best hotels around the world
@@ -291,6 +307,113 @@ export default function UserHomePage() {
           </div>
         </div>
       </div>
+
+      {/* Membership Benefits Section - Only show for free users */}
+      {membership.tier === "free" && (
+        <div className="bg-yellow-50 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                Upgrade to Gold Membership
+              </h2>
+              <p className="mt-4 text-lg text-gray-600">
+                Get exclusive benefits and save on every booking
+              </p>
+            </div>
+
+            <div className="mt-10">
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="px-6 py-8">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-yellow-500 text-white">
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="mt-6 text-xl font-medium text-gray-900">
+                      10% Discount
+                    </h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Save 10% on all your bookings with our Gold membership
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="px-6 py-8">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-yellow-500 text-white">
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="mt-6 text-xl font-medium text-gray-900">
+                      Priority Support
+                    </h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Get priority access to our customer support team
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="px-6 py-8">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-yellow-500 text-white">
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="mt-6 text-xl font-medium text-gray-900">
+                      Early Access
+                    </h3>
+                    <p className="mt-2 text-base text-gray-500">
+                      Be the first to know about deals and promotions
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 text-center">
+                <Link
+                  href="/subscription"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                >
+                  Upgrade Now
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast.message && (
         <div
