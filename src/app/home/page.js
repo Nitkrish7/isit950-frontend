@@ -29,7 +29,21 @@ export default function UserHomePage() {
   const [searchError, setSearchError] = useState("");
   const [toast, setToast] = useState({ message: "", type: "" });
   const [favourites, setFavourites] = useState([]);
-  const { membership } = useMembership();
+  const { membership, renewMembership } = useMembership();
+  const [renewModalOpen, setRenewModalOpen] = useState(false);
+  const [renewLoading, setRenewLoading] = useState(false);
+  const [renewError, setRenewError] = useState("");
+  const [renewSuccess, setRenewSuccess] = useState("");
+
+  // Payment fields for renew
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCVV, setCardCVV] = useState("");
+
+  // Example: 1 year renewal, $199
+  const renewalAmount = 199;
+  const renewalDurationDays = 365;
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -105,6 +119,50 @@ export default function UserHomePage() {
       });
     } finally {
       setTimeout(() => setToast({ message: "", type: "" }), 2500);
+    }
+  };
+
+  const handleRenew = () => {
+    setRenewModalOpen(true);
+    setRenewError("");
+    setRenewSuccess("");
+    setCardNumber("");
+    setCardName("");
+    setCardExpiry("");
+    setCardCVV("");
+  };
+
+  const handleRenewSubmit = async (e) => {
+    e.preventDefault();
+    setRenewLoading(true);
+    setRenewError("");
+    setRenewSuccess("");
+    // Simple validation
+    if (
+      cardNumber.length !== 16 ||
+      !/^[0-9]{16}$/.test(cardNumber) ||
+      cardName.trim() === "" ||
+      !/^\d{2}\/\d{2}$/.test(cardExpiry) ||
+      cardCVV.length !== 3 ||
+      !/^[0-9]{3}$/.test(cardCVV)
+    ) {
+      setRenewError("Please enter valid card details.");
+      setRenewLoading(false);
+      return;
+    }
+    // Calculate new expiry
+    const newExpiry = new Date(
+      Math.max(new Date(membership.expiryDate).getTime(), Date.now()) +
+        renewalDurationDays * 24 * 60 * 60 * 1000
+    ).toISOString();
+    try {
+      await renewMembership(newExpiry, renewalAmount);
+      setRenewSuccess("Membership renewed successfully!");
+      setRenewModalOpen(false);
+    } catch (err) {
+      setRenewError("Failed to renew membership");
+    } finally {
+      setRenewLoading(false);
     }
   };
 
@@ -307,6 +365,155 @@ export default function UserHomePage() {
           </div>
         </div>
       </div>
+
+      {/* Gold Membership Banner */}
+      {membership.tier === "gold" && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 flex items-center justify-between max-w-3xl mx-auto mt-6 mb-4 rounded-lg shadow">
+          <div className="text-yellow-700 font-semibold">
+            Your Gold Membership will expire on{" "}
+            {membership.expiryDate
+              ? new Date(membership.expiryDate).toLocaleDateString()
+              : "-"}
+          </div>
+          <button
+            className="ml-4 px-4 py-2 bg-yellow-400 text-white rounded-lg font-semibold hover:bg-yellow-500 transition-colors"
+            onClick={handleRenew}
+          >
+            Renew
+          </button>
+        </div>
+      )}
+
+      {/* Renew Modal */}
+      {renewModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md relative">
+            <button
+              type="button"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl rounded-full p-2"
+              onClick={() => setRenewModalOpen(false)}
+              disabled={renewLoading}
+            >
+              &times;
+            </button>
+            <div className="p-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Renew Gold Membership
+              </h3>
+              <div className="mb-4 text-lg font-semibold text-gray-700">
+                1 Year: $199
+              </div>
+              <form onSubmit={handleRenewSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Card Number
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={16}
+                    inputMode="numeric"
+                    pattern="[0-9]{16}"
+                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="1234 5678 9012 3456"
+                    value={cardNumber}
+                    onChange={(e) =>
+                      setCardNumber(e.target.value.replace(/\D/g, ""))
+                    }
+                    required
+                    disabled={renewLoading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Name on Card
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="John Doe"
+                    value={cardName}
+                    onChange={(e) => setCardName(e.target.value)}
+                    required
+                    disabled={renewLoading}
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Expiry (MM/YY)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={5}
+                      pattern="\d{2}/\d{2}"
+                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="08/27"
+                      value={cardExpiry}
+                      onChange={(e) => setCardExpiry(e.target.value)}
+                      required
+                      disabled={renewLoading}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-gray-700 font-medium mb-2">
+                      CVV
+                    </label>
+                    <input
+                      type="password"
+                      maxLength={3}
+                      pattern="[0-9]{3}"
+                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="123"
+                      value={cardCVV}
+                      onChange={(e) =>
+                        setCardCVV(e.target.value.replace(/\D/g, ""))
+                      }
+                      required
+                      disabled={renewLoading}
+                    />
+                  </div>
+                </div>
+                {renewError && (
+                  <div className="text-red-600 text-sm">{renewError}</div>
+                )}
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 bg-yellow-400 hover:bg-yellow-500 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+                  disabled={renewLoading}
+                >
+                  {renewLoading ? (
+                    <span className="inline-flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    "Pay & Renew"
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Membership Benefits Section - Only show for free users */}
       {membership.tier === "free" && (

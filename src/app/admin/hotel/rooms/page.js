@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { adminAPI } from "@/lib/api";
 import { useHotelAdmin } from "@/context/HotelAdminContext";
 
+const TIMEFRAMES = [
+  { label: "1 Week", days: 7 },
+  { label: "1 Month", days: 30 },
+  { label: "6 Months", days: 182 },
+  { label: "1 Year", days: 365 },
+  { label: "Custom", days: null },
+];
+
 export default function HotelRoomsPage() {
   const { adminId, hotelId, loading: contextLoading } = useHotelAdmin();
   const [rooms, setRooms] = useState([]);
@@ -18,6 +26,29 @@ export default function HotelRoomsPage() {
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
+  const [blockStart, setBlockStart] = useState("");
+  const [blockEnd, setBlockEnd] = useState("");
+  const [blockLoading, setBlockLoading] = useState(false);
+  const [blockError, setBlockError] = useState("");
+  const [blockSuccess, setBlockSuccess] = useState("");
+  const [blockedDates, setBlockedDates] = useState([]);
+  const [blockedLoading, setBlockedLoading] = useState(false);
+  const [blockedError, setBlockedError] = useState("");
+  const [blockedTimeframe, setBlockedTimeframe] = useState(TIMEFRAMES[1]);
+  const [blockedCustomStart, setBlockedCustomStart] = useState("");
+  const [blockedCustomEnd, setBlockedCustomEnd] = useState("");
+  const [showBlocked, setShowBlocked] = useState(false);
+  const [bookedDates, setBookedDates] = useState([]);
+  const [bookedLoading, setBookedLoading] = useState(false);
+  const [bookedError, setBookedError] = useState("");
+  const [bookedTimeframe, setBookedTimeframe] = useState(TIMEFRAMES[1]);
+  const [bookedCustomStart, setBookedCustomStart] = useState("");
+  const [bookedCustomEnd, setBookedCustomEnd] = useState("");
+  const [showBooked, setShowBooked] = useState(false);
+  const [activeRoomId, setActiveRoomId] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewRoom, setViewRoom] = useState(null);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -51,9 +82,11 @@ export default function HotelRoomsPage() {
         price: room.price,
       });
       setEditMode(true);
+      setActiveRoomId(room.id);
     } else {
       setForm({ id: "", name: "", count: "", no_of_guests: "", price: "" });
       setEditMode(false);
+      setActiveRoomId(null);
     }
     setShowModal(true);
     setError("");
@@ -117,6 +150,96 @@ export default function HotelRoomsPage() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const openBlockModal = () => {
+    setBlockModalOpen(true);
+    setBlockStart("");
+    setBlockEnd("");
+    setBlockError("");
+    setBlockSuccess("");
+  };
+
+  const closeBlockModal = () => setBlockModalOpen(false);
+
+  const handleBlockSubmit = async (e) => {
+    e.preventDefault();
+    setBlockLoading(true);
+    setBlockError("");
+    setBlockSuccess("");
+    try {
+      await adminAPI.blockRoomDates(activeRoomId, blockStart, blockEnd);
+      setBlockSuccess("Dates blocked successfully!");
+      setBlockModalOpen(false);
+    } catch (err) {
+      setBlockError("Failed to block dates");
+    } finally {
+      setBlockLoading(false);
+    }
+  };
+
+  const fetchBlockedDates = async () => {
+    setBlockedLoading(true);
+    setBlockedError("");
+    setBlockedDates([]);
+    let start, end;
+    if (blockedTimeframe.days) {
+      start = new Date();
+      end = new Date(Date.now() + blockedTimeframe.days * 24 * 60 * 60 * 1000);
+    } else {
+      start = new Date(blockedCustomStart);
+      end = new Date(blockedCustomEnd);
+    }
+    try {
+      const res = await adminAPI.getBlockedDates(
+        activeRoomId,
+        start.toISOString(),
+        end.toISOString()
+      );
+      setBlockedDates(res);
+      setShowBlocked(true);
+    } catch (err) {
+      setBlockedError("Failed to fetch blocked dates");
+    } finally {
+      setBlockedLoading(false);
+    }
+  };
+
+  const fetchBookedDates = async () => {
+    setBookedLoading(true);
+    setBookedError("");
+    setBookedDates([]);
+    let start, end;
+    if (bookedTimeframe.days) {
+      start = new Date();
+      end = new Date(Date.now() + bookedTimeframe.days * 24 * 60 * 60 * 1000);
+    } else {
+      start = new Date(bookedCustomStart);
+      end = new Date(bookedCustomEnd);
+    }
+    try {
+      const res = await adminAPI.getBookedDates(
+        activeRoomId,
+        start.toISOString(),
+        end.toISOString()
+      );
+      setBookedDates(res);
+      setShowBooked(true);
+    } catch (err) {
+      setBookedError("Failed to fetch booked dates");
+    } finally {
+      setBookedLoading(false);
+    }
+  };
+
+  const handleViewRoom = (room) => {
+    setViewRoom(room);
+    setActiveRoomId(room.id);
+    setShowViewModal(true);
+    setBlockedTimeframe(TIMEFRAMES[1]);
+    setBookedTimeframe(TIMEFRAMES[1]);
+    setShowBlocked(false);
+    setShowBooked(false);
   };
 
   if (contextLoading)
@@ -235,6 +358,32 @@ export default function HotelRoomsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
                           <button
+                            onClick={() => handleViewRoom(room)}
+                            className="text-green-600 hover:text-green-900 flex items-center gap-1"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            View
+                          </button>
+                          <button
                             onClick={() => handleOpenModal(room)}
                             className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
                           >
@@ -290,7 +439,7 @@ export default function HotelRoomsPage() {
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="p-6">
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">
                   {editMode ? "Edit Room" : "Add New Room"}
@@ -388,6 +537,20 @@ export default function HotelRoomsPage() {
                   </div>
                 </div>
 
+                {editMode && (
+                  <>
+                    <div className="mt-6">
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600"
+                        onClick={openBlockModal}
+                      >
+                        Block Dates
+                      </button>
+                    </div>
+                  </>
+                )}
+
                 {error && (
                   <div className="p-3 bg-red-50 text-red-700 rounded-lg flex items-start gap-2">
                     <svg
@@ -452,6 +615,292 @@ export default function HotelRoomsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+            {/* Block Dates Modal (move outside the form) */}
+            {blockModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                <div className="bg-white rounded-xl shadow-xl w-full max-w-md relative">
+                  <button
+                    type="button"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl rounded-full p-2"
+                    onClick={closeBlockModal}
+                    disabled={blockLoading}
+                  >
+                    &times;
+                  </button>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                      Block Dates for Room
+                    </h3>
+                    <form onSubmit={handleBlockSubmit} className="space-y-5">
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Start Date
+                        </label>
+                        <input
+                          type="date"
+                          value={blockStart}
+                          onChange={(e) => setBlockStart(e.target.value)}
+                          required
+                          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          disabled={blockLoading}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          End Date
+                        </label>
+                        <input
+                          type="date"
+                          value={blockEnd}
+                          onChange={(e) => setBlockEnd(e.target.value)}
+                          required
+                          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          disabled={blockLoading}
+                        />
+                      </div>
+                      {blockError && (
+                        <div className="text-red-600 text-sm">{blockError}</div>
+                      )}
+                      {blockSuccess && (
+                        <div className="text-green-600 text-sm">
+                          {blockSuccess}
+                        </div>
+                      )}
+                      <button
+                        type="submit"
+                        className="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50"
+                        disabled={blockLoading}
+                      >
+                        {blockLoading ? (
+                          <span className="inline-flex items-center">
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Blocking...
+                          </span>
+                        ) : (
+                          "Block Dates"
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && viewRoom && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  Room Details
+                </h2>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Room Information */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-3">
+                    Room Information
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Room Name</p>
+                      <p className="font-medium">{viewRoom.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Quantity</p>
+                      <p className="font-medium">{viewRoom.count}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Max Guests</p>
+                      <p className="font-medium">{viewRoom.no_of_guests}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Price per Night</p>
+                      <p className="font-medium">
+                        ${viewRoom.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Blocked Dates Section */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-3">Blocked Dates</h3>
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    {TIMEFRAMES.map((tf) => (
+                      <button
+                        key={tf.label}
+                        type="button"
+                        className={`px-3 py-1 rounded-lg border ${
+                          blockedTimeframe.label === tf.label
+                            ? "bg-yellow-100 border-yellow-400"
+                            : "bg-white border-gray-300"
+                        }`}
+                        onClick={() => setBlockedTimeframe(tf)}
+                      >
+                        {tf.label}
+                      </button>
+                    ))}
+                  </div>
+                  {blockedTimeframe.label === "Custom" && (
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="date"
+                        value={blockedCustomStart}
+                        onChange={(e) => setBlockedCustomStart(e.target.value)}
+                        className="border rounded px-2 py-1"
+                      />
+                      <input
+                        type="date"
+                        value={blockedCustomEnd}
+                        onChange={(e) => setBlockedCustomEnd(e.target.value)}
+                        className="border rounded px-2 py-1"
+                      />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600"
+                    onClick={fetchBlockedDates}
+                  >
+                    Show Blocked Dates
+                  </button>
+                  {blockedLoading && (
+                    <div className="mt-2 text-sm">Loading...</div>
+                  )}
+                  {blockedError && (
+                    <div className="mt-2 text-red-600 text-sm">
+                      {blockedError}
+                    </div>
+                  )}
+                  {showBlocked && (
+                    <div className="mt-2">
+                      {blockedDates.length === 0 ? (
+                        <div className="text-gray-500 text-sm">
+                          No dates are blocked in the selected timeframe.
+                        </div>
+                      ) : (
+                        <ul className="text-sm text-gray-800 list-disc ml-5">
+                          {blockedDates.map((date) => (
+                            <li key={date}>{date}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Booked Dates Section */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-3">Booked Dates</h3>
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    {TIMEFRAMES.map((tf) => (
+                      <button
+                        key={tf.label}
+                        type="button"
+                        className={`px-3 py-1 rounded-lg border ${
+                          bookedTimeframe.label === tf.label
+                            ? "bg-green-100 border-green-400"
+                            : "bg-white border-gray-300"
+                        }`}
+                        onClick={() => setBookedTimeframe(tf)}
+                      >
+                        {tf.label}
+                      </button>
+                    ))}
+                  </div>
+                  {bookedTimeframe.label === "Custom" && (
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="date"
+                        value={bookedCustomStart}
+                        onChange={(e) => setBookedCustomStart(e.target.value)}
+                        className="border rounded px-2 py-1"
+                      />
+                      <input
+                        type="date"
+                        value={bookedCustomEnd}
+                        onChange={(e) => setBookedCustomEnd(e.target.value)}
+                        className="border rounded px-2 py-1"
+                      />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600"
+                    onClick={fetchBookedDates}
+                  >
+                    Show Booked Dates
+                  </button>
+                  {bookedLoading && (
+                    <div className="mt-2 text-sm">Loading...</div>
+                  )}
+                  {bookedError && (
+                    <div className="mt-2 text-red-600 text-sm">
+                      {bookedError}
+                    </div>
+                  )}
+                  {showBooked && (
+                    <div className="mt-2">
+                      {bookedDates.length === 0 ? (
+                        <div className="text-gray-500 text-sm">
+                          No dates are booked in the selected timeframe.
+                        </div>
+                      ) : (
+                        <ul className="text-sm text-gray-800 list-disc ml-5">
+                          {bookedDates.map((date) => (
+                            <li key={date}>{date}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

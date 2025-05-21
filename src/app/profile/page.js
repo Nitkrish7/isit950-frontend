@@ -14,7 +14,7 @@ import {
   FiX,
   FiCheck,
 } from "react-icons/fi";
-import { FaUserShield } from "react-icons/fa";
+import { FaUserShield, FaStar, FaRegStar } from "react-icons/fa";
 import { format } from "date-fns";
 import Link from "next/link";
 import { useMembership } from "@/context/MembershipContext";
@@ -122,126 +122,220 @@ export default function ProfilePage() {
                 Profile Information
               </h3>
               <div className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  {/* Name Field */}
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <FiUser className="text-gray-400" />
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      id="name"
-                      value={editData.name || ""}
-                      onChange={handleInputChange}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-
-                  {/* Email Field */}
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <FiMail className="text-gray-400" />
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      value={editData.email || ""}
-                      onChange={handleInputChange}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-100 cursor-not-allowed"
-                      disabled
-                      required
-                    />
-                  </div>
-
-                  {/* Phone Field */}
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="phonenumber"
-                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <FiPhone className="text-gray-400" />
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="phonenumber"
-                      id="phonenumber"
-                      value={editData.phonenumber || ""}
-                      onChange={handleInputChange}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-
-                  {/* Date of Birth Field */}
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="dateofbirth"
-                      className="block text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <FiCalendar className="text-gray-400" />
-                      Date of Birth
-                    </label>
-                    <input
-                      type="text"
-                      name="dateofbirth"
-                      id="dateofbirth"
-                      value={editData.dateofbirth || ""}
-                      onChange={handleInputChange}
-                      placeholder="DD/MM/YYYY"
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-
-                  {/* Membership Field */}
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                      <svg
-                        className="h-5 w-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                {/* Edit Profile Button (outside form) */}
+                {!isEditing && (
+                  <button
+                    type="button"
+                    onClick={handleEditToggle}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mb-4"
+                  >
+                    Edit Profile
+                  </button>
+                )}
+                <form onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    {/* Name Field */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-700 flex items-center gap-2"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Membership Tier
+                        <FiUser className="text-gray-400" />
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        value={editData.name || ""}
+                        onChange={handleInputChange}
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        required
+                        disabled={!isEditing}
+                      />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2 py-1 text-sm rounded-full ${
-                          membership.tier === "gold"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+
+                    {/* Email Field */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 flex items-center gap-2"
                       >
-                        {membership.tier === "gold" ? "Gold" : "Free"}
-                      </span>
-                      {membership.tier === "gold" && membership.expiryDate && (
-                        <span className="text-sm text-gray-500">
-                          Expires:{" "}
-                          {new Date(membership.expiryDate).toLocaleDateString()}
+                        <FiMail className="text-gray-400" />
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        value={editData.email || ""}
+                        onChange={handleInputChange}
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-100 cursor-not-allowed"
+                        disabled
+                        required
+                      />
+                    </div>
+
+                    {/* Phone Field */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="phonenumber"
+                        className="block text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <FiPhone className="text-gray-400" />
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phonenumber"
+                        id="phonenumber"
+                        value={editData.phonenumber || ""}
+                        onChange={handleInputChange}
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        required
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    {/* Date of Birth Field */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="dateofbirth"
+                        className="block text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <FiCalendar className="text-gray-400" />
+                        Date of Birth
+                      </label>
+                      <input
+                        type="text"
+                        name="dateofbirth"
+                        id="dateofbirth"
+                        value={editData.dateofbirth || ""}
+                        onChange={handleInputChange}
+                        placeholder="DD/MM/YYYY"
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        required
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    {/* User Rating Field */}
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <FaStar className="text-yellow-400" />
+                        Customer Rating
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {typeof user?.rating === "number" && user.rating > 0 ? (
+                          <>
+                            {[1, 2, 3, 4, 5].map((star) =>
+                              user.rating >= star ? (
+                                <FaStar
+                                  key={star}
+                                  className="text-yellow-400"
+                                />
+                              ) : (
+                                <FaRegStar
+                                  key={star}
+                                  className="text-yellow-400"
+                                />
+                              )
+                            )}
+                            <span className="ml-2 text-gray-800 font-semibold">
+                              {user.rating.toFixed(1)}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                              ({user.ratingCount} rating
+                              {user.ratingCount === 1 ? "" : "s"})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-gray-500 flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <FaRegStar
+                                key={star}
+                                className="text-yellow-400"
+                              />
+                            ))}
+                            <span className="ml-2">No ratings yet</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Membership Field */}
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <svg
+                          className="h-5 w-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Membership Tier
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2 py-1 text-sm rounded-full ${
+                            membership.tier === "gold"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {membership.tier === "gold" ? "Gold" : "Free"}
                         </span>
-                      )}
+                        {membership.tier === "gold" &&
+                          membership.expiryDate && (
+                            <span className="text-sm text-gray-500">
+                              Expires:{" "}
+                              {new Date(
+                                membership.expiryDate
+                              ).toLocaleDateString()}
+                            </span>
+                          )}
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* Save/Cancel Buttons (only in edit mode) */}
+                  {isEditing && (
+                    <div className="mt-6 flex gap-4">
+                      <button
+                        type="submit"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        disabled={isLoading}
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setEditData(user);
+                          setError("");
+                          setSuccess("");
+                        }}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-400 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Success/Error Messages */}
+                  {success && (
+                    <div className="text-green-600 mt-2">{success}</div>
+                  )}
+                  {error && <div className="text-red-600 mt-2">{error}</div>}
+                </form>
 
                 {/* Membership Upgrade Button */}
                 {membership.tier === "free" && (

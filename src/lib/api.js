@@ -62,6 +62,8 @@ export const userAPI = {
     api.post("/user/addtofavourites", { userId, hotelId }),
   removeFavourite: (favId) =>
     api.delete("/user/removefromfavourites", { data: { favId } }),
+  createSubscription: (data) => api.post("/user/subscription/create", data),
+  updateSubscription: (data) => api.put("/user/subscription/update", data),
 };
 
 // Admin API methods
@@ -88,6 +90,14 @@ export const adminAPI = {
   getUpcomingBookings: (hotelid) =>
     api.get(`/admin/upcomingbookings/${hotelid}`),
   getSuperuserStats: () => api.get("/admin/superuser/stats"),
+  rateCustomer: (userId, rating) =>
+    api.post("/admin/customer/rate", { userId, rating }),
+  blockRoomDates: (roomId, startDate, endDate) =>
+    api.post("/admin/dates/block", { roomId, startDate, endDate }),
+  getBlockedDates: (roomId, startDate, endDate) =>
+    api.put("/admin/dates/blocked/get", { roomId, startDate, endDate }),
+  getBookedDates: (roomId, startDate, endDate) =>
+    api.put("/admin/dates/booked/get", { roomId, startDate, endDate }),
 };
 
 export default api;
