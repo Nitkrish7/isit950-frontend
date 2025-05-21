@@ -15,7 +15,7 @@ export default function HotelAdminLayout({ children }) {
     <HotelAdminProvider>
       <div className="min-h-screen bg-gray-50 flex">
         <HotelAdminNavbar />
-        <div className="ml-64">
+        <div className="">
           {/* Top Bar */}
           <header className="bg-white shadow">
             {/* <div className="flex justify-between items-center px-6 py-4">

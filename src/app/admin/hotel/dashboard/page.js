@@ -1,238 +1,333 @@
 // app/admin/hotel/dashboard/page.js
 "use client";
-import { useState, useEffect } from "react";
-import { useHotelAdmin } from "@/context/HotelAdminContext";
+import { useEffect, useState } from "react";
 import { adminAPI } from "@/lib/api";
+import { useHotelAdmin } from "@/context/HotelAdminContext";
 import HotelAdminNavbar from "@/components/HotelAdminNavbar";
 import ReportGenerator from "@/components/ReportGenerator";
 import withRole from "@/components/withRole";
+import { FiCalendar, FiHome, FiBookmark, FiTrendingUp } from "react-icons/fi";
 
 export default withRole(HotelAdminDashboard, ["admin"]);
 
 function HotelAdminDashboard() {
-  const { hotelId, loading: contextLoading } = useHotelAdmin();
-  const [stats, setStats] = useState(null);
+  const { adminId, hotelId, loading: contextLoading } = useHotelAdmin();
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [upcoming, setUpcoming] = useState([]);
-  const [upcomingLoading, setUpcomingLoading] = useState(true);
-  const [upcomingError, setUpcomingError] = useState("");
+  const [calendarData, setCalendarData] = useState({});
   const [hotelName, setHotelName] = useState("");
+  const [stats, setStats] = useState(null);
+  const [now, setNow] = useState(null);
+
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
 
   useEffect(() => {
     if (!hotelId) return;
-    const fetchStats = async () => {
-      setLoading(true);
-      setError("");
+    if (!now) return;
+    const fetchData = async () => {
       try {
-        const res = await adminAPI.getHotelAdminStats(hotelId);
-        setStats(res);
+        setLoading(true);
+        // Get all rooms
+        const roomsRes = await adminAPI.listRooms(hotelId);
+        setRooms(roomsRes);
+
+        // Get current month's start and end dates
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        // Fetch blocked and booked dates for each room
+        const roomData = {};
+        for (const room of roomsRes) {
+          const [blockedDates, bookedDates] = await Promise.all([
+            adminAPI.getBlockedDates(
+              room.id,
+              startDate.toISOString(),
+              endDate.toISOString()
+            ),
+            adminAPI.getBookedDates(
+              room.id,
+              startDate.toISOString(),
+              endDate.toISOString()
+            ),
+          ]);
+
+          roomData[room.id] = {
+            name: room.name,
+            blockedDates: blockedDates,
+            bookedDates: bookedDates,
+          };
+        }
+
+        setCalendarData(roomData);
         // Fetch hotel name
         const hotelDetails = await adminAPI.getHotelDetails(hotelId);
         setHotelName(hotelDetails.name);
+        // Fetch stats
+        const statsRes = await adminAPI.getHotelAdminStats(hotelId);
+        setStats(statsRes);
       } catch (err) {
-        setError("Failed to load dashboard stats");
+        setError("Failed to load dashboard data");
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    const fetchUpcoming = async () => {
-      setUpcomingLoading(true);
-      setUpcomingError("");
-      try {
-        const res = await adminAPI.getUpcomingBookings(hotelId);
-        setUpcoming(res);
-      } catch (err) {
-        setUpcomingError("Failed to load upcoming bookings");
-      } finally {
-        setUpcomingLoading(false);
-      }
-    };
-    fetchStats();
-    fetchUpcoming();
-  }, [hotelId]);
 
-  if (contextLoading || loading) return <div className="p-8">Loading...</div>;
+    fetchData();
+  }, [hotelId, now]);
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+    const days = [];
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      days.push(null);
+    }
+    // Add days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const isDateBlocked = (day, roomId) => {
+    if (!day || !calendarData[roomId] || !now) return false;
+    const date = new Date(now.getFullYear(), now.getMonth(), day);
+    const dateStr = date.toISOString().split("T")[0];
+    return calendarData[roomId].blockedDates.includes(dateStr);
+  };
+
+  const isDateBooked = (day, roomId) => {
+    if (!day || !calendarData[roomId] || !now) return false;
+    const date = new Date(now.getFullYear(), now.getMonth(), day);
+    const dateStr = date.toISOString().split("T")[0];
+    return calendarData[roomId].bookedDates.includes(dateStr);
+  };
+
+  // Only show rooms with at least one blocked or booked date in the month
+  const filteredRooms = rooms.filter((room) => {
+    const data = calendarData[room.id];
+    return (
+      data &&
+      ((data.blockedDates && data.blockedDates.length > 0) ||
+        (data.bookedDates && data.bookedDates.length > 0))
+    );
+  });
+
+  if (contextLoading || loading || !now) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-4 sm:p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  const days = getDaysInMonth(now);
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const currentMonth = monthNames[now.getMonth()];
+  const currentYear = now.getFullYear();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      <div className="flex justify-between items-center mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-blue-800">
-          Hotel Dashboard
-        </h1>
-        <ReportGenerator type="hotel" hotelId={hotelId} hotelName={hotelName} />
-      </div>
-      {error && (
-        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded max-w-xl w-full">
-          {error}
-        </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-          <p className="text-sm font-medium text-gray-500">Total Rooms</p>
-          <p className="text-2xl font-semibold text-gray-900">
-            {stats?.totalRooms ?? "-"}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-          <p className="text-sm font-medium text-gray-500">Occupied Rooms</p>
-          <p className="text-2xl font-semibold text-gray-900">
-            {stats?.occupiedRooms ?? "-"}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-          <p className="text-sm font-medium text-gray-500">Total Bookings</p>
-          <p className="text-2xl font-semibold text-gray-900">
-            {stats?.totalBookings ?? "-"}
-          </p>
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow p-6 max-w-4xl mx-auto mb-8">
-        <h2 className="text-xl font-semibold mb-4">Welcome, Hotel Admin!</h2>
-        <p className="text-gray-600">
-          Here you can manage your rooms, view bookings, and monitor your
-          hotel's performance.
-        </p>
-      </div>
-      <div className="bg-white rounded-lg shadow p-6 max-w-4xl mx-auto">
-        <h2 className="text-lg font-semibold mb-4">Upcoming Bookings</h2>
-        {upcomingLoading ? (
-          <div className="text-gray-500">Loading upcoming bookings...</div>
-        ) : upcomingError ? (
-          <div className="mb-2 p-2 bg-red-100 text-red-700 rounded">
-            {upcomingError}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+            <p className="text-gray-600 mt-1">
+              {hotelName} • {currentMonth} {currentYear}
+            </p>
           </div>
-        ) : upcoming.length === 0 ? (
-          <div className="text-gray-500">No upcoming bookings found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Booking Name
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Room Name
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Start Date
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    End Date
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Room Count
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Guests
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {upcoming.map((booking) => (
-                  <tr key={booking.id}>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      {booking.user?.name || "-"}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      {booking.room?.name || "-"}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      {new Date(booking.startdate).toLocaleString()}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      {new Date(booking.enddate).toLocaleString()}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      {booking.booking_count}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      {booking.no_of_guests}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <ReportGenerator
+            type="hotel"
+            hotelId={hotelId}
+            hotelName={hotelName}
+          />
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg max-w-xl">
+            {error}
           </div>
         )}
+
+        {/* Statistics Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-blue-50 text-blue-600">
+                  <FiHome size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Rooms
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.totalRooms ?? "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-green-50 text-green-600">
+                  <FiBookmark size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Occupied Rooms
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.occupiedRooms ?? "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-purple-50 text-purple-600">
+                  <FiTrendingUp size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Bookings
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.totalBookings ?? "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-amber-50 text-amber-600">
+                  <FiCalendar size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Current Month
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {currentMonth}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calendar Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Room Availability
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Overview of room status for {currentMonth}
+            </p>
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-7 gap-1 mb-3">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div
+                  key={day}
+                  className="text-center font-medium text-gray-500 py-2 text-sm"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((day, index) => (
+                <div
+                  key={index}
+                  className={`aspect-square p-1 rounded-lg transition-all ${
+                    day
+                      ? "hover:bg-gray-50 border border-gray-100"
+                      : "bg-gray-50"
+                  } ${
+                    day === now.getDate() &&
+                    "ring-2 ring-blue-500 ring-offset-1"
+                  }`}
+                >
+                  {day && (
+                    <>
+                      <div
+                        className={`text-sm font-medium mb-1 text-right px-1 ${
+                          day === now.getDate()
+                            ? "text-blue-600"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {day}
+                      </div>
+                      <div className="space-y-1 max-h-[calc(100%-24px)] overflow-y-auto">
+                        {filteredRooms.map((room) => (
+                          <div
+                            key={room.id}
+                            className={`text-xs p-1 rounded truncate ${
+                              isDateBlocked(day, room.id)
+                                ? "bg-amber-50 text-amber-800 border border-amber-100"
+                                : isDateBooked(day, room.id)
+                                ? "bg-green-50 text-green-800 border border-green-100"
+                                : "bg-gray-50 text-gray-500 border border-gray-100"
+                            }`}
+                            title={room.name}
+                          >
+                            {room.name}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-4 bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-50 border border-green-100 rounded-sm"></div>
+            <span className="text-sm text-gray-600">Booked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-amber-50 border border-amber-100 rounded-sm"></div>
+            <span className="text-sm text-gray-600">Blocked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-50 border border-gray-100 rounded-sm"></div>
+            <span className="text-sm text-gray-600">Available</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-50 border border-blue-100 rounded-sm"></div>
+            <span className="text-sm text-gray-600">Today</span>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
-// function StatCard({ title, value, icon, trend, percentage }) {
-//   const iconClasses = {
-//     users:
-//       "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
-//     activeUsers:
-//       "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-//     hotel: "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z",
-//     bed: "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z",
-//     dollar:
-//       "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-//   };
-
-//   const trendColors = {
-//     up: "text-green-500",
-//     down: "text-red-500",
-//     steady: "text-yellow-500",
-//   };
-
-//   const trendIcons = {
-//     up: "M5 10l7-7m0 0l7 7m-7-7v18",
-//     down: "M19 14l-7 7m0 0l-7-7m7 7V3",
-//     steady: "M5 12h14",
-//   };
-
-//   return (
-//     <div className="bg-white rounded-lg shadow p-6">
-//       <div className="flex items-center justify-between">
-//         <div>
-//           <p className="text-sm font-medium text-gray-500">{title}</p>
-//           <p className="text-2xl font-semibold text-gray-900">{value}</p>
-//         </div>
-//         <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
-//           <svg
-//             className="w-6 h-6"
-//             fill="none"
-//             stroke="currentColor"
-//             viewBox="0 0 24 24"
-//           >
-//             <path
-//               strokeLinecap="round"
-//               strokeLinejoin="round"
-//               strokeWidth={2}
-//               d={iconClasses[icon]}
-//             />
-//           </svg>
-//         </div>
-//       </div>
-//       {trend && (
-//         <div className="mt-4 flex items-center">
-//           <svg
-//             className={`w-4 h-4 ${trendColors[trend]}`}
-//             fill="none"
-//             stroke="currentColor"
-//             viewBox="0 0 24 24"
-//           >
-//             <path
-//               strokeLinecap="round"
-//               strokeLinejoin="round"
-//               strokeWidth={2}
-//               d={trendIcons[trend]}
-//             />
-//           </svg>
-//           <span className={`ml-1 text-sm ${trendColors[trend]}`}>
-//             {percentage ||
-//               (trend === "up"
-//                 ? "Increased"
-//                 : trend === "down"
-//                 ? "Decreased"
-//                 : "No change")}
-//           </span>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
