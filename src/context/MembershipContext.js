@@ -18,13 +18,13 @@ export function MembershipProvider({ children }) {
     if (user && user.Subscriptions && user.Subscriptions.length > 0) {
       // Find the latest valid subscription
       const validSub = user.Subscriptions.find(
-        (sub) => new Date(sub.expirson) > new Date()
+        (sub) => new Date(sub.expireson) > new Date()
       );
       if (validSub) {
         setMembership({
           tier: "gold",
-          expiryDate: validSub.expirson,
-          subscriptionId: validSub.id || null,
+          expiryDate: validSub.expireson,
+          subscriptionId: validSub.id || validSub._id || null,
         });
         return;
       }
@@ -32,8 +32,13 @@ export function MembershipProvider({ children }) {
     setMembership({ tier: "free", expiryDate: null, subscriptionId: null });
   }, [user]);
 
+  // Only for internal context updates, not for subscription
   const updateMembership = (newMembership) => {
     setMembership(newMembership);
+  };
+
+  const resetMembership = () => {
+    setMembership({ tier: "free", expiryDate: null, subscriptionId: null });
   };
 
   const calculateDiscountedPrice = (originalPrice) => {
@@ -43,12 +48,39 @@ export function MembershipProvider({ children }) {
     return originalPrice;
   };
 
+  // Helper to format date as 'DD-MM-YYYY HH:mm:ss'
+  function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    const pad = (n) => n.toString().padStart(2, "0");
+    const day = pad(date.getDate());
+    const month = pad(date.getMonth() + 1);
+    const year = date.getFullYear();
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+  }
+
   // For renewals, call the update API
-  const renewMembership = async (expirson, amountpaid) => {
-    if (!membership.subscriptionId) return;
+  const renewMembership = async (expireson, amountpaid) => {
+    console.log("renewMembership called with:", {
+      userId: user.id,
+      expireson,
+      amountpaid,
+    });
+    if (!user?.id) {
+      console.warn("No user id found for renewal!");
+      return;
+    }
+    const formattedExpireson = formatDateTime(expireson);
+    console.log("Calling userAPI.updateSubscription with:", {
+      id: user.id,
+      expireson: formattedExpireson,
+      amountpaid,
+    });
     await userAPI.updateSubscription({
-      id: membership.subscriptionId,
-      expirson,
+      id: user.id,
+      expireson: formattedExpireson,
       amountpaid,
     });
     await fetchUser(user.email); // Refresh user data
@@ -58,9 +90,10 @@ export function MembershipProvider({ children }) {
     <MembershipContext.Provider
       value={{
         membership,
-        updateMembership,
+        updateMembership, // keep for profile editing, not for subscription
         calculateDiscountedPrice,
         renewMembership,
+        resetMembership,
       }}
     >
       {children}

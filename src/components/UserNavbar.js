@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useMembership } from "@/context/MembershipContext";
 import { useState, useRef, useEffect } from "react";
 import {
   FiUser,
@@ -16,6 +17,7 @@ import {
 export default function UserNavbar({ back = false }) {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { resetMembership } = useMembership();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const timeoutId = useRef();
   const dropdownRef = useRef(null);
@@ -63,7 +65,7 @@ export default function UserNavbar({ back = false }) {
               </button>
             )}
 
-            <Link href="/home" className="flex-shrink-0 flex items-center">
+            <Link href="/" className="flex-shrink-0 flex items-center">
               <span className="text-2xl font-bold text-indigo-600">
                 Staytion
               </span>
@@ -133,7 +135,10 @@ export default function UserNavbar({ back = false }) {
                     Profile
                   </Link>
                   <button
-                    onClick={logout}
+                    onClick={() => {
+                      logout();
+                      resetMembership();
+                    }}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2"
                   >
                     <FiLogOut className="w-4 h-4" />
@@ -218,7 +223,10 @@ export default function UserNavbar({ back = false }) {
               Profile
             </Link>
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                resetMembership();
+              }}
               className="w-full text-left text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 block px-3 py-2 rounded-md text-base font-medium flex items-center gap-3"
             >
               <FiLogOut className="w-5 h-5" />

@@ -103,158 +103,171 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            Create Account
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Join Staytion today
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link
+                href="/"
+                className="text-xl font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+              >
+                Staytion
+              </Link>
+            </div>
+          </div>
         </div>
-
-        {error && (
-          <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Full Name *
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email Address *
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="phonenumber"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Phone Number *
-              </label>
-              <input
-                id="phonenumber"
-                name="phonenumber"
-                type="tel"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.phonenumber}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="dateofbirth"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Date of Birth (DD/MM/YYYY) *
-              </label>
-              <input
-                id="dateofbirth"
-                name="dateofbirth"
-                type="text"
-                required
-                placeholder="27/09/2001"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.dateofbirth}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password (min 6 characters) *
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength="6"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Confirm Password *
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                minLength="6"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
+      </nav>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              Create Account
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">Join Staytion today</p>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              {isLoading ? "Creating account..." : "Sign Up"}
-            </button>
-          </div>
-        </form>
+          {error && (
+            <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg">
+              {error}
+            </div>
+          )}
 
-        <div className="text-center text-sm">
-          <span className="text-gray-600">Already have an account? </span>
-          <Link
-            href="/login"
-            className="font-medium text-indigo-600 hover:text-indigo-500"
-          >
-            Sign in
-          </Link>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="rounded-md shadow-sm space-y-4">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Full Name *
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email Address *
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="phonenumber"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Phone Number *
+                </label>
+                <input
+                  id="phonenumber"
+                  name="phonenumber"
+                  type="tel"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={formData.phonenumber}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="dateofbirth"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Date of Birth (DD/MM/YYYY) *
+                </label>
+                <input
+                  id="dateofbirth"
+                  name="dateofbirth"
+                  type="text"
+                  required
+                  placeholder="27/09/2001"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={formData.dateofbirth}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password (min 6 characters) *
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  minLength="6"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Confirm Password *
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  minLength="6"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {isLoading ? "Creating account..." : "Sign Up"}
+              </button>
+            </div>
+          </form>
+          <div className="mt-6 text-center">
+            <Link href="/login" className="text-indigo-600 hover:underline">
+              Back to Login
+            </Link>
+            <span className="mx-2 text-gray-400">|</span>
+            <Link href="/" className="text-indigo-600 hover:underline">
+              Back to Landing Page
+            </Link>
+          </div>
         </div>
       </div>
     </div>
