@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { adminAPI } from "@/lib/api";
 import { useHotelAdmin } from "@/context/HotelAdminContext";
 import toast from "react-hot-toast";
+import emailjs from "@emailjs/browser";
 
 export default function HotelBookingsPage() {
   const { adminId, hotelId, loading: contextLoading } = useHotelAdmin();
@@ -68,6 +69,19 @@ export default function HotelBookingsPage() {
       return;
     try {
       await adminAPI.declineBooking(selectedBooking.id);
+      // Send decline email
+      await emailjs.send(
+        "service_e1ehk0o",
+        "template_g6u3jjh",
+        {
+          name: selectedBooking.user?.name || "Guest",
+          hotelName: selectedBooking.room?.hotel?.name || "Hotel",
+          startDate: new Date(selectedBooking.startdate).toLocaleDateString(),
+          endDate: new Date(selectedBooking.enddate).toLocaleDateString(),
+          email: selectedBooking.user?.email || "",
+        },
+        { publicKey: "ks7n0G36jNygKn6ny" }
+      );
       toast.success("Booking declined successfully!");
       // Refresh bookings
       if (hotelId) {

@@ -118,7 +118,7 @@ export default function HotelsPage() {
           email: res.email,
           password: res.password,
         },
-        { publicKey: "D7yqutHMazalcl_0z" }
+        { publicKey: "SyPA3PMWcj17sU8BK" }
       );
       setMessage("Hotel approved and email sent!");
       setViewRequest(null);
@@ -146,6 +146,16 @@ export default function HotelsPage() {
     setError("");
     try {
       await adminAPI.declineOnboardRequest(viewRequest.id);
+      await emailjs.send(
+        "service_oqimzhm",
+        "template_jwijfy1",
+        {
+          hotelName: viewRequest.hotelname || viewRequest.name || "Hotel",
+          name: viewRequest.name || "",
+          email: viewRequest.hoteladminemail || viewRequest.email || "",
+        },
+        { publicKey: "SyPA3PMWcj17sU8BK" }
+      );
       toast.success("Onboarding request declined.");
       setViewRequest(null);
       fetchPending();

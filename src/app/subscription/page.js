@@ -8,6 +8,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import Link from "next/link";
 import { userAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import emailjs from "@emailjs/browser";
 
 export default function SubscriptionPage() {
   const { membership, updateMembership, renewMembership } = useMembership();
@@ -87,14 +88,31 @@ export default function SubscriptionPage() {
       setTimeout(async () => {
         const plan = plans.find((p) => p.id === selectedPlan);
         try {
+          const expiresOn = new Date(
+            Date.now() + plan.duration * 24 * 60 * 60 * 1000
+          );
           await userAPI.createSubscription({
             userid: user.id,
-            expireson: new Date(
-              Date.now() + plan.duration * 24 * 60 * 60 * 1000
-            ).toISOString(),
+            expireson: expiresOn.toISOString(),
             amountpaid: plan.price,
           });
           await fetchUser(user.email);
+          // Send gold membership confirmation email
+          await emailjs.send(
+            "service_oqimzhm",
+            "template_4rypdbf",
+            {
+              name: user?.name || "",
+              amountPaid: plan.price,
+              expiresOn: `${expiresOn.getDate().toString().padStart(2, "0")}-${(
+                expiresOn.getMonth() + 1
+              )
+                .toString()
+                .padStart(2, "0")}-${expiresOn.getFullYear()}`,
+              email: user?.email || "",
+            },
+            { publicKey: "SyPA3PMWcj17sU8BK" }
+          );
         } catch (err) {
           setPaymentError("Failed to create subscription. Please try again.");
           return;

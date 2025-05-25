@@ -33,6 +33,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import { useMembership } from "@/context/MembershipContext";
+import emailjs from "@emailjs/browser";
 
 // Tag to icon mapping
 const tagIcons = {
@@ -247,6 +248,22 @@ export default function HotelDetailsPage() {
             booking_count: calculatedRoomCount,
             no_of_guests: numberOfGuests,
           });
+          // Send booking confirmation email
+          emailjs.send(
+            "service_e1ehk0o",
+            "template_ek7k5q2",
+            {
+              name: user?.name || "Guest",
+              hotelName: hotel?.name || "Hotel",
+              startDate: checkIn,
+              endDate: checkOut,
+              roomName: selectedRoom?.name || "Room",
+              guestCount: numberOfGuests,
+              hotelEmail: hotel?.email || "",
+              email: user?.email || "",
+            },
+            { publicKey: "ks7n0G36jNygKn6ny" }
+          );
           setToast({ message: "Booking successful!", type: "success" });
           setAvailabilityModalOpen(false);
           setTimeout(() => setToast({ message: "", type: "" }), 3000);
