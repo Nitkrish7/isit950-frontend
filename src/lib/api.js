@@ -64,6 +64,10 @@ export const userAPI = {
     api.delete("/user/removefromfavourites", { data: { favId } }),
   createSubscription: (data) => api.post("/user/subscription/create", data),
   updateSubscription: (data) => api.put("/user/subscription/update", data),
+  updateBooking: (data) => api.put("/booking/update", data),
+  cancelBooking: (bookingId) =>
+    api.delete("/booking/delete", { data: { bookingId } }),
+  getNotifications: (userid) => api.get(`/notifications/fetch/${userid}`),
 };
 
 // Admin API methods
@@ -98,6 +102,10 @@ export const adminAPI = {
     api.put("/admin/dates/blocked/get", { roomId, startDate, endDate }),
   getBookedDates: (roomId, startDate, endDate) =>
     api.put("/admin/dates/booked/get", { roomId, startDate, endDate }),
+  declineBooking: (bookingId) =>
+    api.delete("/admin/booking/decline", { data: { bookingId } }),
+  declineOnboardRequest: (id) =>
+    api.delete("/admin/onboard/delete", { data: { id } }),
 };
 
 export default api;

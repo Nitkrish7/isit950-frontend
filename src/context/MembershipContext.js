@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { userAPI } from "@/lib/api";
+import toast from "react-hot-toast";
 
 const MembershipContext = createContext();
 
@@ -63,27 +64,40 @@ export function MembershipProvider({ children }) {
 
   // For renewals, call the update API
   const renewMembership = async (expireson, amountpaid) => {
+    // Get the latest subscription ID from user's Subscriptions array
+    const latestSubscription = user?.Subscriptions?.[0];
+    const subscriptionId = latestSubscription?.id;
+
     console.log("renewMembership called with:", {
-      userId: user.id,
+      subscriptionId,
       expireson,
       amountpaid,
     });
-    if (!user?.id) {
-      console.warn("No user id found for renewal!");
+
+    if (!subscriptionId) {
+      console.warn("No subscription id found for renewal!");
       return;
     }
-    const formattedExpireson = formatDateTime(expireson);
+
+    const formattedExpireson = expireson;
     console.log("Calling userAPI.updateSubscription with:", {
-      id: user.id,
+      id: subscriptionId,
       expireson: formattedExpireson,
       amountpaid,
     });
-    await userAPI.updateSubscription({
-      id: user.id,
-      expireson: formattedExpireson,
-      amountpaid,
-    });
-    await fetchUser(user.email); // Refresh user data
+
+    try {
+      await userAPI.updateSubscription({
+        id: subscriptionId,
+        expireson: formattedExpireson,
+        amountpaid,
+      });
+      await fetchUser(user.email); // Refresh user data
+      toast.success("Membership renewed successfully!");
+    } catch (error) {
+      console.error("Error renewing membership:", error);
+      toast.error("Failed to renew membership. Please try again.");
+    }
   };
 
   return (

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { userAPI, adminAPI } from "@/lib/api";
 import emailjs from "@emailjs/browser";
+import toast from "react-hot-toast";
 
 const TABS = { ACTIVE: "Active", PENDING: "Pending" };
 
@@ -126,6 +127,31 @@ export default function HotelsPage() {
     } catch (err) {
       setError(
         err?.message || JSON.stringify(err) || "Failed to approve hotel"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!viewRequest) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to decline this onboarding request?"
+      )
+    )
+      return;
+    setIsSubmitting(true);
+    setMessage("");
+    setError("");
+    try {
+      await adminAPI.declineOnboardRequest(viewRequest.id);
+      toast.success("Onboarding request declined.");
+      setViewRequest(null);
+      fetchPending();
+    } catch (err) {
+      setError(
+        err?.message || JSON.stringify(err) || "Failed to decline request"
       );
     } finally {
       setIsSubmitting(false);
@@ -663,6 +689,13 @@ export default function HotelsPage() {
                     </svg>
                   )}
                   {isSubmitting ? "Processing..." : "Approve Request"}
+                </button>
+                <button
+                  onClick={handleDecline}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Processing..." : "Decline Request"}
                 </button>
               </div>
             </div>

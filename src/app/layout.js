@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { HotelAdminProvider } from "@/context/HotelAdminContext";
 import { MembershipProvider } from "@/context/MembershipContext";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +18,10 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <AuthProvider>
           <MembershipProvider>
-            <HotelAdminProvider>{children}</HotelAdminProvider>
+            <HotelAdminProvider>
+              {children}
+              <Toaster position="top-right" />
+            </HotelAdminProvider>
           </MembershipProvider>
         </AuthProvider>
       </body>

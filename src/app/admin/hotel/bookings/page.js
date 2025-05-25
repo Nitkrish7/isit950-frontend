@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { adminAPI } from "@/lib/api";
 import { useHotelAdmin } from "@/context/HotelAdminContext";
+import toast from "react-hot-toast";
 
 export default function HotelBookingsPage() {
   const { adminId, hotelId, loading: contextLoading } = useHotelAdmin();
@@ -58,6 +59,24 @@ export default function HotelBookingsPage() {
       setRatingError("Failed to rate customer");
     } finally {
       setRatingLoading(false);
+    }
+  };
+
+  const handleDeclineBooking = async () => {
+    if (!selectedBooking) return;
+    if (!window.confirm("Are you sure you want to decline this booking?"))
+      return;
+    try {
+      await adminAPI.declineBooking(selectedBooking.id);
+      toast.success("Booking declined successfully!");
+      // Refresh bookings
+      if (hotelId) {
+        const bookingsRes = await adminAPI.listBookingsByHotel(hotelId);
+        setBookings(bookingsRes);
+      }
+      setModalOpen(false);
+    } catch (err) {
+      toast.error("Failed to decline booking");
     }
   };
 
@@ -216,6 +235,12 @@ export default function HotelBookingsPage() {
                   ) : (
                     "Submit Rating"
                   )}
+                </button>
+                <button
+                  onClick={handleDeclineBooking}
+                  className="mt-4 w-full px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Decline Booking
                 </button>
                 {ratingSuccess && (
                   <div className="text-green-600 mt-2">{ratingSuccess}</div>

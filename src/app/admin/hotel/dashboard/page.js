@@ -6,7 +6,13 @@ import { useHotelAdmin } from "@/context/HotelAdminContext";
 import HotelAdminNavbar from "@/components/HotelAdminNavbar";
 import ReportGenerator from "@/components/ReportGenerator";
 import withRole from "@/components/withRole";
-import { FiCalendar, FiHome, FiBookmark, FiTrendingUp } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiHome,
+  FiBookmark,
+  FiTrendingUp,
+  FiDollarSign,
+} from "react-icons/fi";
 
 export default withRole(HotelAdminDashboard, ["admin"]);
 
@@ -222,14 +228,16 @@ function HotelAdminDashboard() {
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-full bg-amber-50 text-amber-600">
-                  <FiCalendar size={20} />
+                  <FiDollarSign size={20} />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">
-                    Current Month
+                    Total Revenue
                   </p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {currentMonth}
+                    {typeof stats.totalRevenue === "number"
+                      ? `$${stats.totalRevenue.toLocaleString()}`
+                      : "-"}
                   </p>
                 </div>
               </div>
