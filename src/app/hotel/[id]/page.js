@@ -259,7 +259,7 @@ export default function HotelDetailsPage() {
               endDate: checkOut,
               roomName: selectedRoom?.name || "Room",
               guestCount: numberOfGuests,
-              hotelEmail: hotel?.email || "",
+              hotelEmail: hotel?.adminemail || "",
               email: user?.email || "",
             },
             { publicKey: "ks7n0G36jNygKn6ny" }
